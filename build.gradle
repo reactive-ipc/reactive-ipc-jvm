@@ -11,6 +11,9 @@ ext {
 	// Network Transports
 	nettyVersion = '4.0.26.Final'
 
+	// Composition Libraries
+	rxjava1Version = '1.0.7'
+
 	// Testing
 	mockitoVersion = '1.10.19'
 	junitVersion = '4.12'
@@ -95,6 +98,17 @@ project('reactive-ipc-netty4') {
 
 		// Netty
 		compile "io.netty:netty-all:$nettyVersion"
+	}
+}
+
+project('reactive-ipc-rxjava1') {
+	description = 'Reactive IPC Composition Layer Implementation'
+	dependencies {
+		// ripc-tcp
+		compile project(":reactive-ipc-netty4")
+
+		// RxJava 1.0
+		compile "io.reactivex:rxjava:$rxjava1Version"
 	}
 }
 
