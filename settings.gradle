@@ -1,0 +1,5 @@
+rootProject.name = 'reactive-ipc'
+
+include 'reactive-ipc-core',
+				'reactive-ipc-tcp',
+				'reactive-ipc-netty4'
