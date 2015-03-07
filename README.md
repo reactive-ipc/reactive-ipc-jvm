@@ -6,6 +6,6 @@ The desired timeline is BETA (1.0.rc1) by September 2015 and GA (1.0 Final) by e
 
 This would result in 3 layers of modules: API, Transport and Core.
 
-![screen shot 2015-03-05 at 4 47 40 pm](https://cloud.githubusercontent.com/assets/813492/6535920/d0a42414-c3fd-11e4-99f1-acf8e03811bd.png)
+![screen shot 2015-03-06 at 4 06 51 pm](https://cloud.githubusercontent.com/assets/813492/6538742/06420452-c41b-11e4-9467-93d1ac26e25a.png)
 
 Discussion of goals and motiviations can be found in [Issue #1](https://github.com/reactive-ipc/reactive-ipc-jvm/issues/1).
