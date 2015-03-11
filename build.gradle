@@ -74,7 +74,7 @@ subprojects { subproject ->
 	}
 }
 
-project('reactive-ipc-core') {
+project('ripc-core') {
 	description = 'Reactive IPC Core Components'
 	dependencies {
 		// Reactive Streams
@@ -82,30 +82,30 @@ project('reactive-ipc-core') {
 	}
 }
 
-project('reactive-ipc-tcp') {
+project('ripc-protocol-tcp') {
 	description = 'Reactive IPC TCP Components'
 	dependencies {
 		// ripc-core
-		compile project(":reactive-ipc-core")
+		compile project(":ripc-core")
 	}
 }
 
-project('reactive-ipc-netty4') {
+project('ripc-transport-netty4') {
 	description = 'Reactive IPC Netty 4.x Transport Implementation'
 	dependencies {
 		// ripc-tcp
-		compile project(":reactive-ipc-tcp")
+		compile project(":ripc-protocol-tcp")
 
 		// Netty
 		compile "io.netty:netty-all:$nettyVersion"
 	}
 }
 
-project('reactive-ipc-rxjava1') {
+project('ripc-composition-rxjava1') {
 	description = 'Reactive IPC Composition Layer Implementation'
 	dependencies {
 		// ripc-tcp
-		compile project(":reactive-ipc-netty4")
+		compile project(":ripc-transport-netty4")
 
 		// RxJava 1.0
 		compile "io.reactivex:rxjava:$rxjava1Version"
@@ -113,7 +113,7 @@ project('reactive-ipc-rxjava1') {
 }
 
 configure(rootProject) {
-	description = "Reactive Streams IPC"
+	description = "Reactive IPC"
 
 	task api(type: Javadoc) {
 		group = "Documentation"

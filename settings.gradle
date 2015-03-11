@@ -1,6 +1,6 @@
 rootProject.name = 'reactive-ipc'
 
-include 'reactive-ipc-core',
-				'reactive-ipc-tcp',
-				'reactive-ipc-netty4',
-				'reactive-ipc-rxjava1'
+include 'ripc-core',
+				'ripc-protocol-tcp',
+				'ripc-transport-netty4',
+				'ripc-composition-rxjava1'
