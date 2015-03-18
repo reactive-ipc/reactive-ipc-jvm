@@ -8,29 +8,25 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 import io.ripc.core.NamedDaemonThreadFactory;
-import io.ripc.protocol.tcp.Connection;
-import io.ripc.protocol.tcp.ConnectionPublisher;
-import io.ripc.transport.netty4.tcp.ChannelInitializerSubscription;
-import org.reactivestreams.Subscriber;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.ripc.protocol.tcp.ConnectionHandler;
 
 /**
  * Created by jbrisbin on 3/10/15.
  */
-public class NettyTcpServer extends ChannelInitializer<SocketChannel> implements ConnectionPublisher<ByteBuf> {
+public class NettyTcpServer extends ChannelInitializer<SocketChannel> {
 
-	private final List<ChannelInitializerSubscription> subscriptions = new ArrayList<>();
+	private final ServerBootstrap            bootstrap;
+	private final ConnectionHandler<ByteBuf> handler;
 
-	private final ServerBootstrap bootstrap;
-
-	public NettyTcpServer(ServerBootstrap bootstrap) {
+	public NettyTcpServer(ServerBootstrap bootstrap,
+	                      ConnectionHandler<ByteBuf> handler) {
 		this.bootstrap = bootstrap;
+		this.handler = handler;
 	}
 
-	public static ConnectionPublisher<ByteBuf> listen(int port) {
+	public static NettyTcpServer listen(int port, ConnectionHandler<ByteBuf> handler) {
 		ServerBootstrap b = new ServerBootstrap();
 
 		int threads = Runtime.getRuntime().availableProcessors();
@@ -40,7 +36,7 @@ public class NettyTcpServer extends ChannelInitializer<SocketChannel> implements
 
 		b.channel(NioServerSocketChannel.class);
 
-		NettyTcpServer server = new NettyTcpServer(b);
+		NettyTcpServer server = new NettyTcpServer(b, handler);
 		b.childHandler(server);
 
 		b.bind(port);
@@ -48,24 +44,19 @@ public class NettyTcpServer extends ChannelInitializer<SocketChannel> implements
 		return server;
 	}
 
+	public void shutdown() {
+		bootstrap.group().shutdownGracefully();
+	}
+
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
 		ch.config().setAutoRead(false);
 		ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
 
-		synchronized (subscriptions) {
-			for (ChannelInitializerSubscription sub : subscriptions) {
-				ch.pipeline().addLast(sub);
-			}
-		}
+		ch.pipeline().addLast(new LoggingHandler());
+
+		NettyTcpServerConnection conn = new NettyTcpServerConnection(ch);
+		handler.handle(conn);
 	}
 
-	@Override
-	public void subscribe(Subscriber<? super Connection<ByteBuf>> s) {
-		ChannelInitializerSubscription sub = new ChannelInitializerSubscription(s);
-		synchronized (subscriptions) {
-			subscriptions.add(sub);
-		}
-		s.onSubscribe(sub);
-	}
 }

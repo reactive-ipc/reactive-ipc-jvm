@@ -10,10 +10,15 @@ import io.ripc.transport.netty4.ByteBufBuffer;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
 /**
  * Created by jbrisbin on 3/10/15.
  */
 public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdapter implements Subscription {
+
+	private static final AtomicLongFieldUpdater<ChannelInboundHandlerSubscription> PEND_UPD
+			= AtomicLongFieldUpdater.newUpdater(ChannelInboundHandlerSubscription.class, "pending");
 
 	private final Channel                             channel;
 	private final Subscriber<? super Buffer<ByteBuf>> subscriber;
@@ -38,16 +43,16 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		if (pending < 1) {
 			super.channelInactive(ctx);
-			return;
 		}
-		subscriber.onComplete();
 	}
 
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
 		if (pending < 1) {
 			super.channelReadComplete(ctx);
+			return;
 		}
+		subscriber.onComplete();
 	}
 
 	@Override
@@ -60,10 +65,8 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 		ByteBuf buf = (ByteBuf) msg;
 		try {
 			subscriber.onNext(new ByteBufBuffer(buf, false));
-			synchronized (this) {
-				pending--;
-			}
-			channel.read();
+			PEND_UPD.decrementAndGet(this);
+			//channel.read();
 		} catch (Throwable t) {
 			subscriber.onError(t);
 		}
@@ -75,13 +78,12 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 			return;
 		}
 
-		synchronized (this) {
-			if (demand < Long.MAX_VALUE) {
-				pending += demand;
-			} else {
-				pending = Long.MAX_VALUE;
-			}
+		if (demand < Long.MAX_VALUE) {
+			PEND_UPD.addAndGet(this, demand);
+		} else {
+			PEND_UPD.set(this, Long.MAX_VALUE);
 		}
+
 		channel.read();
 	}
 
