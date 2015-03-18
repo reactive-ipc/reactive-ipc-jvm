@@ -15,15 +15,12 @@ import io.ripc.protocol.tcp.ConnectionHandler;
 /**
  * Created by jbrisbin on 3/10/15.
  */
-public class NettyTcpServer extends ChannelInitializer<SocketChannel> {
+public class NettyTcpServer {
 
-	private final ServerBootstrap            bootstrap;
-	private final ConnectionHandler<ByteBuf> handler;
+	private final ServerBootstrap bootstrap;
 
-	public NettyTcpServer(ServerBootstrap bootstrap,
-	                      ConnectionHandler<ByteBuf> handler) {
+	public NettyTcpServer(ServerBootstrap bootstrap) {
 		this.bootstrap = bootstrap;
-		this.handler = handler;
 	}
 
 	public static NettyTcpServer listen(int port, ConnectionHandler<ByteBuf> handler) {
@@ -36,8 +33,19 @@ public class NettyTcpServer extends ChannelInitializer<SocketChannel> {
 
 		b.channel(NioServerSocketChannel.class);
 
-		NettyTcpServer server = new NettyTcpServer(b, handler);
-		b.childHandler(server);
+		NettyTcpServer server = new NettyTcpServer(b);
+		b.childHandler(new ChannelInitializer<SocketChannel>() {
+			@Override
+			protected void initChannel(SocketChannel ch) throws Exception {
+				ch.config().setAutoRead(false);
+				ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
+
+				ch.pipeline().addLast(new LoggingHandler());
+
+				NettyTcpServerConnection conn = new NettyTcpServerConnection(ch);
+				handler.get().accept(conn);
+			}
+		});
 
 		b.bind(port);
 
@@ -46,17 +54,6 @@ public class NettyTcpServer extends ChannelInitializer<SocketChannel> {
 
 	public void shutdown() {
 		bootstrap.group().shutdownGracefully();
-	}
-
-	@Override
-	protected void initChannel(SocketChannel ch) throws Exception {
-		ch.config().setAutoRead(false);
-		ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
-
-		ch.pipeline().addLast(new LoggingHandler());
-
-		NettyTcpServerConnection conn = new NettyTcpServerConnection(ch);
-		handler.handle(conn);
 	}
 
 }

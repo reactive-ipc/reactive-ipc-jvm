@@ -25,7 +25,7 @@ public class NettyTcpServerIntegrationTests {
 	public void canStartNettyTcpServer() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(1);
 
-		NettyTcpServer server = NettyTcpServer.listen(3000, conn -> {
+		NettyTcpServer server = NettyTcpServer.listen(3000, () -> conn -> {
 			conn.subscribe(new Subscriber<Buffer<ByteBuf>>() {
 				private Subscription subscription;
 
@@ -78,7 +78,6 @@ public class NettyTcpServerIntegrationTests {
 					});
 				}
 			});
-
 		});
 
 		while (!latch.await(1, TimeUnit.SECONDS)) {
