@@ -1,6 +1,5 @@
 package io.ripc.transport.netty4.tcp;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -11,7 +10,8 @@ import org.reactivestreams.Subscription;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
- * Created by jbrisbin on 3/10/15.
+ * A {@code ChannelInboundHandlerAdapter} that is responsible for propagating data from the IO channel to the read
+ * {@link org.reactivestreams.Subscriber}.
  */
 public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdapter implements Subscription {
 
@@ -60,11 +60,9 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 			return;
 		}
 
-		ByteBuf buf = (ByteBuf) msg;
 		try {
-			subscriber.onNext(buf);
+			subscriber.onNext(msg);
 			PEND_UPD.decrementAndGet(this);
-			//channel.read();
 		} catch (Throwable t) {
 			subscriber.onError(t);
 		}

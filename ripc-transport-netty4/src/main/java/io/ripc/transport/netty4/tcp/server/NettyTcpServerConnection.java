@@ -2,11 +2,12 @@ package io.ripc.transport.netty4.tcp.server;
 
 import io.netty.channel.Channel;
 import io.ripc.core.DemandCalculator;
+import io.ripc.core.EventListener;
 import io.ripc.protocol.tcp.connection.TcpConnection;
-import io.ripc.protocol.tcp.connection.TcpConnectionEventListener;
+import io.ripc.protocol.tcp.connection.listener.ReadCompleteListener;
 import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
 import io.ripc.transport.netty4.tcp.ChannelInboundHandlerSubscription;
-import io.ripc.transport.netty4.tcp.TcpConnectionEventListenerChannelHandler;
+import io.ripc.transport.netty4.tcp.EventListenerChannelHandler;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -14,7 +15,7 @@ import org.reactivestreams.Subscription;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
- * Represents a Netty Channel.
+ * Represents a Reactive IPC {@code TcpConnection}.
  */
 public class NettyTcpServerConnection implements TcpConnection {
 
@@ -24,22 +25,32 @@ public class NettyTcpServerConnection implements TcpConnection {
 	private final Channel       channel;
 	private final ReadPublisher readPublisher;
 
+	private WriteSubscriber writeSubscriber;
+
 	public NettyTcpServerConnection(Channel channel) {
 		this.channel = channel;
 		this.readPublisher = new ReadPublisher(channel);
 	}
 
 	@Override
-	public TcpConnection addListener(TcpConnectionEventListener listener) {
-		TcpConnectionEventListenerChannelHandler handler =
-				channel.pipeline().get(TcpConnectionEventListenerChannelHandler.class);
+	public TcpConnection addListener(EventListener listener) {
+		EventListenerChannelHandler handler =
+				channel.pipeline().get(EventListenerChannelHandler.class);
 		if (null == handler) {
-			handler = new TcpConnectionEventListenerChannelHandler(this);
+			handler = new EventListenerChannelHandler(this);
 			channel.pipeline().addLast(handler);
 		}
 
-		if (WriteCompleteListener.class.isAssignableFrom(listener.getClass())) {
+		Class<?> listenerType = listener.getClass();
+
+		// Assign WriteCompleteListener that will be notified of successful writes.
+		if (WriteCompleteListener.class.isAssignableFrom(listenerType)) {
 			handler.setWriteCompleteListener((WriteCompleteListener) listener);
+		}
+
+		// Assign a ReadCompleteListener that will be notified when all data has been read.
+		if (ReadCompleteListener.class.isAssignableFrom(listenerType)) {
+			handler.setReadCompleteListener((ReadCompleteListener) listener);
 		}
 
 		return this;
@@ -52,10 +63,15 @@ public class NettyTcpServerConnection implements TcpConnection {
 
 	@Override
 	public TcpConnection writer(Publisher<?> writer) {
+		if (null != writeSubscriber) {
+			throw new IllegalStateException("A writer has already been set on this connection");
+		}
+
 		DemandCalculator demandCalculator = DemandCalculator.class.isAssignableFrom(writer.getClass())
 		                                    ? (DemandCalculator) writer
 		                                    : null;
-		writer.subscribe(new WriteSubscriber(demandCalculator));
+		this.writeSubscriber = new WriteSubscriber(demandCalculator);
+		writer.subscribe(writeSubscriber);
 		return this;
 	}
 
@@ -99,7 +115,7 @@ public class NettyTcpServerConnection implements TcpConnection {
 						toRequest = 1L;
 					}
 
-					if (toRequest == Long.MAX_VALUE) {
+					if (toRequest == Long.MAX_VALUE && pending != Long.MAX_VALUE) {
 						PENDING_UPD.set(WriteSubscriber.this, Long.MAX_VALUE);
 						subscription.request(Long.MAX_VALUE);
 					} else if (toRequest > 0) {
@@ -118,13 +134,17 @@ public class NettyTcpServerConnection implements TcpConnection {
 			}
 
 			this.subscription = subscription;
+			// Request for any writes right away.
 			subscriptionRequest.run();
 		}
 
 		@Override
 		public void onNext(Object msg) {
+			// Write to the channel for every onNext signal.
 			channel.write(msg);
+			// Decrement pending counter to show we've handled this write.
 			PENDING_UPD.decrementAndGet(this);
+			// We'll get a StackOverflowError if we don't schedule this request.
 			channel.eventLoop().execute(subscriptionRequest);
 		}
 
@@ -135,7 +155,9 @@ public class NettyTcpServerConnection implements TcpConnection {
 
 		@Override
 		public void onComplete() {
+			// Write completes always result in a flush.
 			channel.flush();
+			// This is a terminal state, so close the underlying channel.
 			channel.close();
 		}
 	}

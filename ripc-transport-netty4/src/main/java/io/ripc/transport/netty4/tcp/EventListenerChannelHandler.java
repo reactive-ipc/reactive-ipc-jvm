@@ -6,26 +6,37 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.ripc.protocol.tcp.connection.TcpConnection;
+import io.ripc.protocol.tcp.connection.listener.ReadCompleteListener;
 import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
 
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
- * Created by jbrisbin on 3/26/15.
+ * Listens for events on the Netty IO channel and invokes the appropriate {@link io.ripc.core.EventListener} for that
+ * type of event.
  */
-public class TcpConnectionEventListenerChannelHandler extends ChannelDuplexHandler {
+public class EventListenerChannelHandler extends ChannelDuplexHandler {
 
-	private static final AtomicLongFieldUpdater<TcpConnectionEventListenerChannelHandler> WRITTEN_UPD
-			= AtomicLongFieldUpdater.newUpdater(TcpConnectionEventListenerChannelHandler.class, "writtenSinceLastFlush");
+	private static final AtomicLongFieldUpdater<EventListenerChannelHandler> WRITTEN_UPD
+			= AtomicLongFieldUpdater.newUpdater(EventListenerChannelHandler.class, "writtenSinceLastFlush");
 
 	private final TcpConnection connection;
 
 	private volatile long writtenSinceLastFlush = 0L;
 
+	private ReadCompleteListener  readCompleteListener;
 	private WriteCompleteListener writeCompleteListener;
 
-	public TcpConnectionEventListenerChannelHandler(TcpConnection connection) {
+	public EventListenerChannelHandler(TcpConnection connection) {
 		this.connection = connection;
+	}
+
+	public ReadCompleteListener getReadCompleteListener() {
+		return readCompleteListener;
+	}
+
+	public void setReadCompleteListener(ReadCompleteListener readCompleteListener) {
+		this.readCompleteListener = readCompleteListener;
 	}
 
 	public WriteCompleteListener getWriteCompleteListener() {
@@ -56,6 +67,14 @@ public class TcpConnectionEventListenerChannelHandler extends ChannelDuplexHandl
 		}
 		super.write(ctx, msg, promise);
 		WRITTEN_UPD.incrementAndGet(this);
+	}
+
+	@Override
+	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+		super.channelReadComplete(ctx);
+		if (null != readCompleteListener && readCompleteListener.readComplete(connection)) {
+			ctx.close();
+		}
 	}
 
 }

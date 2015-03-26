@@ -8,7 +8,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import io.ripc.protocol.tcp.connection.TcpConnectionHandler;
+import io.ripc.core.Handler;
+import io.ripc.protocol.tcp.connection.TcpConnection;
 import io.ripc.transport.netty4.NamedDaemonThreadFactory;
 
 /**
@@ -22,7 +23,7 @@ public class NettyTcpServer {
 		this.bootstrap = bootstrap;
 	}
 
-	public static NettyTcpServer listen(int port, TcpConnectionHandler handler) {
+	public static NettyTcpServer listen(int port, Handler<TcpConnection> handler) {
 		ServerBootstrap b = new ServerBootstrap();
 
 		int threads = Runtime.getRuntime().availableProcessors();

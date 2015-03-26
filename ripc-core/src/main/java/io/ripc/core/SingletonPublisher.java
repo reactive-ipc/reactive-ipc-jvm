@@ -7,7 +7,9 @@ import org.reactivestreams.Subscription;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by jbrisbin on 3/26/15.
+ * A {@code SingletonPublisher} provides a single value only once and then calls {@code onComplete}. If the value is
+ * {@code null}, then the {@link org.reactivestreams.Subscriber#onNext(Object)} is not called but {@link
+ * org.reactivestreams.Subscriber#onComplete()} is.
  */
 public class SingletonPublisher<T> implements Publisher<T>, DemandCalculator {
 
