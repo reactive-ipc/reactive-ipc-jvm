@@ -2,10 +2,11 @@ package io.ripc.transport.netty4.tcp.server;
 
 import io.netty.channel.Channel;
 import io.ripc.core.DemandCalculator;
-import io.ripc.protocol.tcp.TcpConnection;
-import io.ripc.protocol.tcp.TcpConnectionEventHandler;
+import io.ripc.protocol.tcp.connection.TcpConnection;
+import io.ripc.protocol.tcp.connection.TcpConnectionEventListener;
+import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
 import io.ripc.transport.netty4.tcp.ChannelInboundHandlerSubscription;
-import io.ripc.transport.netty4.tcp.NettyChannelTcpConnectionEventHandler;
+import io.ripc.transport.netty4.tcp.TcpConnectionEventListenerChannelHandler;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -23,21 +24,24 @@ public class NettyTcpServerConnection implements TcpConnection {
 	private final Channel       channel;
 	private final ReadPublisher readPublisher;
 
-	private TcpConnectionEventHandler eventHandler;
-
 	public NettyTcpServerConnection(Channel channel) {
 		this.channel = channel;
 		this.readPublisher = new ReadPublisher(channel);
 	}
 
 	@Override
-	public TcpConnection eventHandler(TcpConnectionEventHandler eventHandler) {
-		if (null != this.eventHandler) {
-			throw new IllegalArgumentException(TcpConnectionEventHandler.class.getSimpleName()
-			                                   + " already set on this connection");
+	public TcpConnection addListener(TcpConnectionEventListener listener) {
+		TcpConnectionEventListenerChannelHandler handler =
+				channel.pipeline().get(TcpConnectionEventListenerChannelHandler.class);
+		if (null == handler) {
+			handler = new TcpConnectionEventListenerChannelHandler(this);
+			channel.pipeline().addLast(handler);
 		}
-		this.eventHandler = eventHandler;
-		channel.pipeline().addLast(new NettyChannelTcpConnectionEventHandler(eventHandler, this));
+
+		if (WriteCompleteListener.class.isAssignableFrom(listener.getClass())) {
+			handler.setWriteCompleteListener((WriteCompleteListener) listener);
+		}
+
 		return this;
 	}
 
@@ -47,11 +51,11 @@ public class NettyTcpServerConnection implements TcpConnection {
 	}
 
 	@Override
-	public TcpConnection writer(Publisher<?> sink) {
-		DemandCalculator demandCalculator = DemandCalculator.class.isAssignableFrom(sink.getClass())
-		                                    ? (DemandCalculator) sink
+	public TcpConnection writer(Publisher<?> writer) {
+		DemandCalculator demandCalculator = DemandCalculator.class.isAssignableFrom(writer.getClass())
+		                                    ? (DemandCalculator) writer
 		                                    : null;
-		sink.subscribe(new WriteSubscriber(demandCalculator));
+		writer.subscribe(new WriteSubscriber(demandCalculator));
 		return this;
 	}
 
@@ -126,9 +130,7 @@ public class NettyTcpServerConnection implements TcpConnection {
 
 		@Override
 		public void onError(Throwable t) {
-			if (null != eventHandler) {
-				eventHandler.onError(NettyTcpServerConnection.this, t);
-			}
+			channel.close();
 		}
 
 		@Override

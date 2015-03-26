@@ -2,9 +2,8 @@ package io.ripc.transport.netty4.tcp.server;
 
 import io.netty.buffer.Unpooled;
 import io.ripc.core.Publishers;
-import io.ripc.protocol.tcp.AbstractTcpConnectionEventHandler;
-import io.ripc.protocol.tcp.TcpConnection;
-import io.ripc.protocol.tcp.TcpConnectionEventHandler;
+import io.ripc.protocol.tcp.connection.TcpConnection;
+import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -25,10 +24,16 @@ public class NettyTcpServerIntegrationTests {
 	public void canStartNettyTcpServer() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(1);
 
-		TcpConnectionEventHandler eventHandler = new AbstractTcpConnectionEventHandler() {
+		WriteCompleteListener writeCompleteListener = new WriteCompleteListener() {
 			@Override
-			public void onOpen(TcpConnection connection) {
-				connection.reader()
+			public boolean writeComplete(TcpConnection connection, long count, Object msg) {
+				return count > 0;
+			}
+		};
+
+		NettyTcpServer server = NettyTcpServer.listen(3000, connection ->
+				connection.addListener(writeCompleteListener)
+				          .reader()
 				          .subscribe(new Subscriber<Object>() {
 					          Subscription subscription;
 
@@ -59,11 +64,7 @@ public class NettyTcpServerIntegrationTests {
 						          LOG.info("complete");
 						          latch.countDown();
 					          }
-				          });
-			}
-		};
-
-		NettyTcpServer server = NettyTcpServer.listen(3000, connection -> connection.eventHandler(eventHandler));
+				          }));
 
 		while (!latch.await(1, TimeUnit.SECONDS)) {
 			Thread.sleep(1000);

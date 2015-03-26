@@ -1,4 +1,4 @@
-package io.ripc.protocol.tcp;
+package io.ripc.protocol.tcp.connection;
 
 import org.reactivestreams.Publisher;
 
@@ -7,10 +7,10 @@ import org.reactivestreams.Publisher;
  */
 public interface TcpConnection {
 
-	TcpConnection eventHandler(TcpConnectionEventHandler eventHandler);
-
 	Publisher<?> reader();
 
-	TcpConnection writer(Publisher<?> sink);
+	TcpConnection writer(Publisher<?> writer);
+
+	TcpConnection addListener(TcpConnectionEventListener listener);
 
 }

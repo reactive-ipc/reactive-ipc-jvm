@@ -8,7 +8,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import io.ripc.protocol.tcp.TcpConnectionHandler;
+import io.ripc.protocol.tcp.connection.TcpConnectionHandler;
 import io.ripc.transport.netty4.NamedDaemonThreadFactory;
 
 /**
