@@ -1,4 +1,4 @@
-package io.ripc.core;
+package io.ripc.transport.netty4;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;

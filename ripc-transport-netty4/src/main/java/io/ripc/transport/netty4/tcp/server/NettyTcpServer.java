@@ -1,7 +1,6 @@
 package io.ripc.transport.netty4.tcp.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
@@ -9,8 +8,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import io.ripc.core.NamedDaemonThreadFactory;
-import io.ripc.protocol.tcp.ConnectionHandler;
+import io.ripc.protocol.tcp.TcpConnectionHandler;
+import io.ripc.transport.netty4.NamedDaemonThreadFactory;
 
 /**
  * Created by jbrisbin on 3/10/15.
@@ -23,7 +22,7 @@ public class NettyTcpServer {
 		this.bootstrap = bootstrap;
 	}
 
-	public static NettyTcpServer listen(int port, ConnectionHandler<ByteBuf> handler) {
+	public static NettyTcpServer listen(int port, TcpConnectionHandler handler) {
 		ServerBootstrap b = new ServerBootstrap();
 
 		int threads = Runtime.getRuntime().availableProcessors();
@@ -43,7 +42,7 @@ public class NettyTcpServer {
 				ch.pipeline().addLast(new LoggingHandler());
 
 				NettyTcpServerConnection conn = new NettyTcpServerConnection(ch);
-				handler.get().accept(conn);
+				handler.handle(conn);
 			}
 		});
 
