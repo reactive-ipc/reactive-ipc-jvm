@@ -6,6 +6,7 @@ import io.ripc.composition.reactor.tcp.ReactorTcpServer;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.rx.Streams;
 
 import java.nio.charset.Charset;
 
@@ -26,12 +27,11 @@ public class ReactorTcpServerIntegrationTests {
 			                    .map(buf -> buf.toString(Charset.defaultCharset()))
 			                    .consume(s -> {
 				                    LOG.info("received {}: {}", s.getClass(), s);
-
-				                    conn.out().onComplete();
 			                    });
 
-			                conn.out()
-			                    .onNext(Unpooled.wrappedBuffer("Hello World!".getBytes()));
+			                conn.out(Streams.just("Hello World!")
+			                                .log("out")
+			                                .map(s -> Unpooled.wrappedBuffer(s.getBytes())));
 		                });
 
 		while (true) {
