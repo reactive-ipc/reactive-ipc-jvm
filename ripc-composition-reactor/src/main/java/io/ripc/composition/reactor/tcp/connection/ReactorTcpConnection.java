@@ -9,33 +9,33 @@ import reactor.rx.broadcast.Broadcaster;
 /**
  * Created by jbrisbin on 3/27/15.
  */
-public class ReactorTcpConnection<T> {
+public class ReactorTcpConnection<R, W> {
 
-	private final Broadcaster<T> writeComplete = Broadcaster.create();
+	private final Broadcaster<W> writeComplete = Broadcaster.create();
 
 	private final TcpConnection connection;
-	private final Stream<T>     in;
+	private final Stream<R>     in;
 
 	@SuppressWarnings("unchecked")
-	public ReactorTcpConnection(TcpConnection connection, Class<T> type) {
+	public ReactorTcpConnection(TcpConnection connection, Class<R> readType, Class<W> writeType) {
 		this.connection = connection;
 
-		this.in = Streams.wrap(connection.reader()).map(type::cast);
+		this.in = Streams.wrap(connection.reader()).map(readType::cast);
 		this.connection.addListener(new WriteCompleteListener() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public boolean writeComplete(TcpConnection connection, long count, Object msg) {
-				writeComplete.onNext(type.cast(msg));
+				writeComplete.onNext(writeType.cast(msg));
 				return false;
 			}
 		});
 	}
 
-	public Stream<T> in() {
+	public Stream<R> in() {
 		return in;
 	}
 
-	public Stream<T> out(Stream<T> out) {
+	public Stream<W> out(Stream<W> out) {
 		connection.writer(out.map(Object.class::cast));
 		return writeComplete;
 	}

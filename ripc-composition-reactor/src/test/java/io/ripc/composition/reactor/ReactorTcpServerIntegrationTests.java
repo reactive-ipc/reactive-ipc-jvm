@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by jbrisbin on 3/27/15.
+ * Integration tests for Reactor implementations of RIPC components.
  */
 public class ReactorTcpServerIntegrationTests {
 
@@ -20,7 +20,7 @@ public class ReactorTcpServerIntegrationTests {
 	public void reactorTcpServerAcceptsData() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(1);
 
-		ReactorTcpServer<ByteBuf> server = ReactorTcpServer.listen(3000, ByteBuf.class);
+		ReactorTcpServer<ByteBuf, ByteBuf> server = ReactorTcpServer.listen(3000, ByteBuf.class, ByteBuf.class);
 
 		server.log("connection")
 		      .consume(conn -> conn.out(conn.in()
