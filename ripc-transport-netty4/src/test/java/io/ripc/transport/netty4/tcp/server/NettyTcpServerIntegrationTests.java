@@ -41,8 +41,9 @@ public class NettyTcpServerIntegrationTests {
 			return false;
 		};
 
-		NettyTcpServer server = NettyTcpServer.listen(3000, connection ->
-				connection
+		NettyTcpServer server = NettyTcpServer
+				.listen(3000)
+				.handler(connection -> connection
 						.addListener(writeCompleteListener)
 						.addListener(readCompleteListener)
 						.reader()
@@ -77,9 +78,13 @@ public class NettyTcpServerIntegrationTests {
 							}
 						}));
 
+		server.start();
+
 		while (!latch.await(1, TimeUnit.SECONDS)) {
 			Thread.sleep(1000);
 		}
+
+		Thread.sleep(1000);
 
 		server.shutdown();
 	}

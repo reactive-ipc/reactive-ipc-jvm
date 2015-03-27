@@ -1,6 +1,7 @@
 package io.ripc.composition.reactor.tcp;
 
 import io.ripc.composition.reactor.tcp.connection.ReactorTcpConnection;
+import io.ripc.protocol.tcp.TcpServer;
 import io.ripc.transport.netty4.tcp.server.NettyTcpServer;
 import org.reactivestreams.Subscriber;
 import reactor.rx.Stream;
@@ -13,21 +14,19 @@ public class ReactorTcpServer<T> extends Stream<ReactorTcpConnection<T>> {
 
 	private final Broadcaster<ReactorTcpConnection<T>> connections = Broadcaster.create();
 
-	private NettyTcpServer server;
+	private TcpServer<ReactorTcpConnection<T>> server;
 
-	public ReactorTcpServer() {
+	public ReactorTcpServer(int port, Class<T> type) {
+		this.server = NettyTcpServer.listen(port)
+		                            .intercept(conn -> new ReactorTcpConnection<>(conn, type))
+		                            .handler(connections::onNext);
+		this.server.start();
 	}
 
 	public static <T> ReactorTcpServer<T> listen(int port, Class<T> type) {
-		ReactorTcpServer<T> server = new ReactorTcpServer<>();
-
-		server.server = NettyTcpServer.listen(port, connection -> {
-			ReactorTcpConnection<T> conn = new ReactorTcpConnection<>(connection, type);
-			server.connections.onNext(conn);
-		});
-
-		return server;
+		return new ReactorTcpServer<>(port, type);
 	}
+
 
 	public void shutdown() {
 		server.shutdown();
