@@ -62,7 +62,9 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 
 		try {
 			subscriber.onNext(msg);
-			PEND_UPD.decrementAndGet(this);
+			if (pending < Long.MAX_VALUE) {
+				PEND_UPD.decrementAndGet(this);
+			}
 		} catch (Throwable t) {
 			subscriber.onError(t);
 		}
