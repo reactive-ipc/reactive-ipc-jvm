@@ -14,7 +14,7 @@ public interface TcpConnection {
 	 *
 	 * @return {@code this}
 	 */
-	Publisher<?> reader();
+	Publisher<Object> reader();
 
 	/**
 	 * Set the write {@link org.reactivestreams.Publisher} that will be used to send outbound data to the peer. Can only
@@ -23,7 +23,7 @@ public interface TcpConnection {
 	 * @param writer the {@link org.reactivestreams.Publisher} which will produce outbound data
 	 * @return {@code this}
 	 */
-	TcpConnection writer(Publisher<?> writer);
+	TcpConnection writer(Publisher<Object> writer);
 
 	/**
 	 * Add a type of {@link io.ripc.core.EventListener} to the connection which will respond to the events for which that

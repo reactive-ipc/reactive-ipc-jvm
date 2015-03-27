@@ -57,12 +57,12 @@ public class NettyTcpServerConnection implements TcpConnection {
 	}
 
 	@Override
-	public Publisher<?> reader() {
+	public Publisher<Object> reader() {
 		return readPublisher;
 	}
 
 	@Override
-	public TcpConnection writer(Publisher<?> writer) {
+	public TcpConnection writer(Publisher<Object> writer) {
 		if (null != writeSubscriber) {
 			throw new IllegalStateException("A writer has already been set on this connection");
 		}

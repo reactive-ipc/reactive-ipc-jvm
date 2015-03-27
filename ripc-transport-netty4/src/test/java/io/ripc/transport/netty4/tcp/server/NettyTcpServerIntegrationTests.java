@@ -21,12 +21,13 @@ public class NettyTcpServerIntegrationTests {
 
 	private static final Logger LOG = LoggerFactory.getLogger(NettyTcpServerIntegrationTests.class);
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void canStartNettyTcpServer() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(1);
 
 		// This is going to start writing as soon as a request is made, so don't attach it right away.
-		Publisher<?> writer = Publishers.just(Unpooled.wrappedBuffer("Hello World!".getBytes()));
+		Publisher writer = Publishers.just(Unpooled.wrappedBuffer("Hello World!".getBytes()));
 
 		WriteCompleteListener writeCompleteListener = (connection, count, msg) -> {
 			// Flush after every write.
