@@ -13,6 +13,7 @@ ext {
 
 	// Composition Libraries
 	rxjava1Version = '1.0.8'
+	reactorVersion = '2.0.0.RELEASE'
 
 	// Testing
 	mockitoVersion = '1.10.19'
@@ -59,6 +60,7 @@ allprojects {
 	}
 
 	repositories {
+		maven { url 'http://repo.spring.io/libs-release' }
 		jcenter()
 		mavenCentral()
 	}
@@ -110,6 +112,17 @@ project('ripc-composition-rxjava1') {
 
 		// RxJava 1.0
 		compile "io.reactivex:rxjava:$rxjava1Version"
+	}
+}
+
+project('ripc-composition-reactor') {
+	description = 'Reactive IPC Composition Layer Implementation'
+	dependencies {
+		// ripc-tcp
+		compile project(":ripc-transport-netty4")
+
+		// Reactor
+		compile "io.projectreactor:reactor-stream:$reactorVersion"
 	}
 }
 
