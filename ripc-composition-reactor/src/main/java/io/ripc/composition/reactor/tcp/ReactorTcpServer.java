@@ -11,17 +11,15 @@ import reactor.rx.broadcast.Broadcaster;
  */
 public class ReactorTcpServer<T> extends Stream<ReactorTcpConnection<T>> {
 
-	private final Broadcaster<ReactorTcpConnection<T>> connections;
+	private final Broadcaster<ReactorTcpConnection<T>> connections = Broadcaster.create();
 
 	private NettyTcpServer server;
 
-	public ReactorTcpServer(Broadcaster<ReactorTcpConnection<T>> connections) {
-		this.connections = connections;
+	public ReactorTcpServer() {
 	}
 
 	public static <T> ReactorTcpServer<T> listen(int port, Class<T> type) {
-		Broadcaster<ReactorTcpConnection<T>> connections = Broadcaster.create();
-		ReactorTcpServer<T> server = new ReactorTcpServer<>(connections);
+		ReactorTcpServer<T> server = new ReactorTcpServer<>();
 
 		server.server = NettyTcpServer.listen(port, connection -> {
 			ReactorTcpConnection<T> conn = new ReactorTcpConnection<>(connection, type);
