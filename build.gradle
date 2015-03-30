@@ -111,7 +111,8 @@ project('ripc-composition-rxjava1') {
 		compile project(":ripc-transport-netty4")
 
 		// RxJava 1.0
-		compile "io.reactivex:rxjava:$rxjava1Version"
+		compile "io.reactivex:rxjava:$rxjava1Version",
+        'io.reactivex:rxjava-reactive-streams:0.3.0'
 	}
 }
 
