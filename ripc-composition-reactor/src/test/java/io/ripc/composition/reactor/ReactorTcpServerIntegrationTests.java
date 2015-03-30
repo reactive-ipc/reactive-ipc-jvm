@@ -1,10 +1,10 @@
 package io.ripc.composition.reactor;
 
-import io.netty.buffer.ByteBuf;
 import io.ripc.composition.reactor.tcp.ReactorTcpServer;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.io.codec.StandardCodecs;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +20,7 @@ public class ReactorTcpServerIntegrationTests {
 	public void reactorTcpServerAcceptsData() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(1);
 
-		ReactorTcpServer<ByteBuf, ByteBuf> server = ReactorTcpServer.listen(3000, ByteBuf.class, ByteBuf.class);
+		ReactorTcpServer<String, String> server = ReactorTcpServer.listen(3000, StandardCodecs.STRING_CODEC);
 
 		server.log("connection")
 		      .consume(conn -> conn.out(conn.in()

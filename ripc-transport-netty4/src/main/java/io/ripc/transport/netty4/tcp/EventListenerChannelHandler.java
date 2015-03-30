@@ -8,6 +8,7 @@ import io.netty.channel.ChannelPromise;
 import io.ripc.protocol.tcp.connection.TcpConnection;
 import io.ripc.protocol.tcp.connection.listener.ReadCompleteListener;
 import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
+import io.ripc.transport.netty4.listener.ChannelActiveListener;
 
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
@@ -26,6 +27,7 @@ public class EventListenerChannelHandler extends ChannelDuplexHandler {
 
 	private ReadCompleteListener  readCompleteListener;
 	private WriteCompleteListener writeCompleteListener;
+	private ChannelActiveListener channelActiveListener;
 
 	public EventListenerChannelHandler(TcpConnection connection) {
 		this.connection = connection;
@@ -45,6 +47,22 @@ public class EventListenerChannelHandler extends ChannelDuplexHandler {
 
 	public void setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
 		this.writeCompleteListener = writeCompleteListener;
+	}
+
+	public ChannelActiveListener getChannelActiveListener() {
+		return channelActiveListener;
+	}
+
+	public void setChannelActiveListener(ChannelActiveListener channelActiveListener) {
+		this.channelActiveListener = channelActiveListener;
+	}
+
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		if (null != channelActiveListener) {
+			channelActiveListener.channelActive(ctx);
+		}
+		super.channelActive(ctx);
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import io.ripc.core.EventListener;
 import io.ripc.protocol.tcp.connection.TcpConnection;
 import io.ripc.protocol.tcp.connection.listener.ReadCompleteListener;
 import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
+import io.ripc.transport.netty4.listener.ChannelActiveListener;
 import io.ripc.transport.netty4.tcp.ChannelInboundHandlerSubscription;
 import io.ripc.transport.netty4.tcp.EventListenerChannelHandler;
 import org.reactivestreams.Publisher;
@@ -53,6 +54,11 @@ public class NettyTcpServerConnection implements TcpConnection {
 			handler.setReadCompleteListener((ReadCompleteListener) listener);
 		}
 
+		// Assign a ChannelActiveListener that will be notified when a Channel becomes active
+		if (ChannelActiveListener.class.isAssignableFrom(listenerType)) {
+			handler.setChannelActiveListener((ChannelActiveListener) listener);
+		}
+
 		return this;
 	}
 
@@ -93,7 +99,7 @@ public class NettyTcpServerConnection implements TcpConnection {
 		public void subscribe(Subscriber<? super Object> subscriber) {
 			ChannelInboundHandlerSubscription sub = new ChannelInboundHandlerSubscription(channel, subscriber);
 			subscriber.onSubscribe(sub);
-			channel.pipeline().addLast(sub);
+			channel.pipeline().addLast("reactive-ipc-inbound", sub);
 		}
 	}
 
