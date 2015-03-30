@@ -24,16 +24,13 @@ public class ReactorTcpServerIntegrationTests {
 
 		server.log("connection")
 		      .consume(conn -> conn.out(conn.in()
-		                                    .log("in")
-		                                    .observeComplete(v -> latch.countDown()))
+		                                    .log("in"))
 		                           .log("confirmation")
+		                           .observeComplete(v -> latch.countDown())
 		                           .consume(buf -> LOG.info("write confirmed: {}", buf)));
 
 		while (!latch.await(1, TimeUnit.SECONDS)) {
-			Thread.sleep(500);
 		}
-
-		Thread.sleep(500);
 
 		server.shutdown();
 	}

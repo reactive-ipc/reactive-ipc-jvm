@@ -2,6 +2,7 @@ package io.ripc.transport.netty4.tcp.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -21,6 +22,8 @@ public class NettyTcpServer<C> implements TcpServer<C> {
 	private final int             port;
 	private final Interceptor     interceptor;
 	private final ServerBootstrap bootstrap;
+
+	private ChannelFuture startFuture;
 
 	private Handler handler;
 
@@ -77,7 +80,10 @@ public class NettyTcpServer<C> implements TcpServer<C> {
 
 	@Override
 	public void start() {
-		bootstrap.bind(port);
+		if (null != startFuture) {
+			return;
+		}
+		startFuture = bootstrap.bind(port);
 	}
 
 	public void shutdown() {

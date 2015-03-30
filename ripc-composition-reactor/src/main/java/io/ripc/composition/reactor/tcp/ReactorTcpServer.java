@@ -20,13 +20,11 @@ public class ReactorTcpServer<R, W> extends Stream<ReactorTcpConnection<R, W>> {
 		this.server = NettyTcpServer.listen(port)
 		                            .intercept(conn -> new ReactorTcpConnection<>(conn, readType, writeType))
 		                            .handler(connections::onNext);
-		this.server.start();
 	}
 
 	public static <R, W> ReactorTcpServer<R, W> listen(int port, Class<R> readType, Class<W> writeType) {
 		return new ReactorTcpServer<>(port, readType, writeType);
 	}
-
 
 	public void shutdown() {
 		server.shutdown();
@@ -34,6 +32,7 @@ public class ReactorTcpServer<R, W> extends Stream<ReactorTcpConnection<R, W>> {
 
 	@Override
 	public void subscribe(Subscriber<? super ReactorTcpConnection<R, W>> s) {
+		server.start();
 		connections.subscribe(s);
 	}
 
