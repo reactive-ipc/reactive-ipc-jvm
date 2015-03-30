@@ -1,36 +1,84 @@
 package io.ripc.transport.netty4.tcp.server;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.ripc.core.io.Buffer;
-import io.ripc.protocol.tcp.Connection;
+import io.ripc.core.DemandCalculator;
+import io.ripc.core.EventListener;
+import io.ripc.protocol.tcp.connection.TcpConnection;
+import io.ripc.protocol.tcp.connection.listener.ReadCompleteListener;
+import io.ripc.protocol.tcp.connection.listener.WriteCompleteListener;
+import io.ripc.transport.netty4.listener.ChannelActiveListener;
 import io.ripc.transport.netty4.tcp.ChannelInboundHandlerSubscription;
+import io.ripc.transport.netty4.tcp.EventListenerChannelHandler;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-/**
- * Represents a Netty Channel.
- */
-public class NettyTcpServerConnection implements Connection<ByteBuf> {
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
-	private final Channel channel;
+/**
+ * Represents a Reactive IPC {@code TcpConnection}.
+ */
+public class NettyTcpServerConnection implements TcpConnection {
+
+	private static final AtomicLongFieldUpdater<WriteSubscriber> PENDING_UPD
+			= AtomicLongFieldUpdater.newUpdater(WriteSubscriber.class, "pending");
+
+	private final Channel       channel;
+	private final ReadPublisher readPublisher;
+
+	private WriteSubscriber writeSubscriber;
 
 	public NettyTcpServerConnection(Channel channel) {
 		this.channel = channel;
+		this.readPublisher = new ReadPublisher(channel);
 	}
 
 	@Override
-	public void write(Publisher<Buffer<ByteBuf>> data) {
-		data.subscribe(new WriteSubscriber());
+	public TcpConnection addListener(EventListener listener) {
+		EventListenerChannelHandler handler =
+				channel.pipeline().get(EventListenerChannelHandler.class);
+		if (null == handler) {
+			handler = new EventListenerChannelHandler(this);
+			channel.pipeline().addLast(handler);
+		}
+
+		Class<?> listenerType = listener.getClass();
+
+		// Assign WriteCompleteListener that will be notified of successful writes.
+		if (WriteCompleteListener.class.isAssignableFrom(listenerType)) {
+			handler.setWriteCompleteListener((WriteCompleteListener) listener);
+		}
+
+		// Assign a ReadCompleteListener that will be notified when all data has been read.
+		if (ReadCompleteListener.class.isAssignableFrom(listenerType)) {
+			handler.setReadCompleteListener((ReadCompleteListener) listener);
+		}
+
+		// Assign a ChannelActiveListener that will be notified when a Channel becomes active
+		if (ChannelActiveListener.class.isAssignableFrom(listenerType)) {
+			handler.setChannelActiveListener((ChannelActiveListener) listener);
+		}
+
+		return this;
 	}
 
 	@Override
-	public void subscribe(Subscriber<? super Buffer<ByteBuf>> s) {
-		ChannelInboundHandlerSubscription sub = new ChannelInboundHandlerSubscription(channel, s);
-		s.onSubscribe(sub);
-		channel.pipeline()
-		       .addLast(sub);
+	public Publisher<Object> reader() {
+		return readPublisher;
+	}
+
+	@Override
+	public TcpConnection writer(Publisher<Object> writer) {
+		if (null != writeSubscriber) {
+			throw new IllegalStateException("A writer has already been set on this connection");
+		}
+
+		DemandCalculator demandCalculator = DemandCalculator.class.isAssignableFrom(writer.getClass())
+		                                    ? (DemandCalculator) writer
+		                                    : null;
+		this.writeSubscriber = new WriteSubscriber(demandCalculator);
+		writer.subscribe(writeSubscriber);
+		return this;
 	}
 
 	@Override
@@ -40,35 +88,83 @@ public class NettyTcpServerConnection implements Connection<ByteBuf> {
 		       '}';
 	}
 
-	private final class WriteSubscriber implements Subscriber<Buffer<ByteBuf>> {
-		Subscription subscription;
+	private final static class ReadPublisher implements Publisher<Object> {
+		private final Channel channel;
 
-		@Override
-		public void onSubscribe(Subscription s) {
-			if (null != subscription) {
-				s.cancel();
-				return;
-			}
-			(subscription = s).request(1);
+		public ReadPublisher(Channel channel) {
+			this.channel = channel;
 		}
 
 		@Override
-		public void onNext(Buffer<ByteBuf> buffer) {
-			channel.write(buffer.get());
-			// This causes a StackOverflowError
-			//subscription.request(1);
-			// This doesn't
-			channel.eventLoop().execute(() -> subscription.request(1));
+		public void subscribe(Subscriber<? super Object> subscriber) {
+			ChannelInboundHandlerSubscription sub = new ChannelInboundHandlerSubscription(channel, subscriber);
+			subscriber.onSubscribe(sub);
+			channel.pipeline().addLast("reactive-ipc-inbound", sub);
+		}
+	}
+
+	private final class WriteSubscriber implements Subscriber<Object> {
+		private final Runnable subscriptionRequest;
+
+		private Subscription subscription;
+
+		volatile long pending = 0L;
+
+		private WriteSubscriber(DemandCalculator demandCalculator) {
+			this.subscriptionRequest = new Runnable() {
+				@Override
+				public void run() {
+					final long toRequest;
+					if (null != demandCalculator) {
+						toRequest = demandCalculator.calculateDemand(pending);
+					} else {
+						toRequest = 1L;
+					}
+
+					if (toRequest == Long.MAX_VALUE && pending != Long.MAX_VALUE) {
+						PENDING_UPD.set(WriteSubscriber.this, Long.MAX_VALUE);
+						subscription.request(Long.MAX_VALUE);
+					} else if (toRequest > 0) {
+						PENDING_UPD.addAndGet(WriteSubscriber.this, toRequest);
+						subscription.request(pending);
+					}
+				}
+			};
+		}
+
+		@Override
+		public void onSubscribe(Subscription subscription) {
+			if (null != this.subscription) {
+				subscription.cancel();
+				return;
+			}
+
+			this.subscription = subscription;
+			// Request for any writes right away.
+			subscriptionRequest.run();
+		}
+
+		@Override
+		public void onNext(Object msg) {
+			// Write to the channel for every onNext signal.
+			channel.write(msg);
+			// Decrement pending counter to show we've handled this write.
+			PENDING_UPD.decrementAndGet(this);
+			// We'll get a StackOverflowError if we don't schedule this request.
+			channel.eventLoop().execute(subscriptionRequest);
 		}
 
 		@Override
 		public void onError(Throwable t) {
-
+			channel.close();
 		}
 
 		@Override
 		public void onComplete() {
+			// Write completes always result in a flush.
 			channel.flush();
+			// This is a terminal state, so close the underlying channel.
+			channel.close();
 		}
 	}
 

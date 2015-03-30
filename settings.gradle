@@ -3,4 +3,5 @@ rootProject.name = 'reactive-ipc'
 include 'ripc-core',
 				'ripc-protocol-tcp',
 				'ripc-transport-netty4',
-				'ripc-composition-rxjava1'
+				'ripc-composition-rxjava1',
+				'ripc-composition-reactor'

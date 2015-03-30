@@ -1,31 +1,29 @@
 package io.ripc.transport.netty4.tcp;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.ripc.core.Specification;
-import io.ripc.core.io.Buffer;
-import io.ripc.transport.netty4.ByteBufBuffer;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
- * Created by jbrisbin on 3/10/15.
+ * A {@code ChannelInboundHandlerAdapter} that is responsible for propagating data from the IO channel to the read
+ * {@link org.reactivestreams.Subscriber}.
  */
 public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdapter implements Subscription {
 
 	private static final AtomicLongFieldUpdater<ChannelInboundHandlerSubscription> PEND_UPD
 			= AtomicLongFieldUpdater.newUpdater(ChannelInboundHandlerSubscription.class, "pending");
 
-	private final Channel                             channel;
-	private final Subscriber<? super Buffer<ByteBuf>> subscriber;
+	private final Channel                    channel;
+	private final Subscriber<? super Object> subscriber;
 
 	private volatile long pending = 0;
 
-	public ChannelInboundHandlerSubscription(Channel channel, Subscriber<? super Buffer<ByteBuf>> subscriber) {
+	public ChannelInboundHandlerSubscription(Channel channel, Subscriber<? super Object> subscriber) {
 		this.channel = channel;
 		this.subscriber = subscriber;
 	}
@@ -62,11 +60,11 @@ public class ChannelInboundHandlerSubscription extends ChannelInboundHandlerAdap
 			return;
 		}
 
-		ByteBuf buf = (ByteBuf) msg;
 		try {
-			subscriber.onNext(new ByteBufBuffer(buf, false));
-			PEND_UPD.decrementAndGet(this);
-			//channel.read();
+			subscriber.onNext(msg);
+			if (pending < Long.MAX_VALUE) {
+				PEND_UPD.decrementAndGet(this);
+			}
 		} catch (Throwable t) {
 			subscriber.onError(t);
 		}

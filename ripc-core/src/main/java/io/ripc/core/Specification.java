@@ -3,7 +3,7 @@ package io.ripc.core;
 import org.reactivestreams.Subscriber;
 
 /**
- * Created by jbrisbin on 3/10/15.
+ * Helper class to encapsulate various checks required by the Reactive Streams Specification.
  */
 public abstract class Specification {
 
