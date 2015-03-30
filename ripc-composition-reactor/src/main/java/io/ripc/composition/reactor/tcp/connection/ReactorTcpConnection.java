@@ -36,7 +36,9 @@ public class ReactorTcpConnection<R, W> {
 	}
 
 	public Stream<W> out(Stream<W> out) {
-		connection.writer(out.map(Object.class::cast));
+		connection.writer(out.observeComplete(v -> writeComplete.onComplete())
+		                     .when(Throwable.class, writeComplete::onError)
+		                     .map(Object.class::cast));
 		return writeComplete;
 	}
 
