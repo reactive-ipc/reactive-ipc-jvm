@@ -84,7 +84,7 @@ project('ripc-protocol-tcp') {
 		compile project(":ripc-core")
         compile "org.slf4j:slf4j-api:1.7.6"
 		testCompile 'io.reactivex:rxjava:1.0.8'
-        testCompile 'io.reactivex:rxjava-reactive-streams:0.3.0'
+        testCompile 'io.reactivex:rxjava-reactive-streams:0.5.0'
 	}
 }
 
@@ -100,7 +100,7 @@ project('ripc-transport-netty4-examples') {
 		// ripc-core
 		compile project(":ripc-transport-netty4")
         compile 'io.reactivex:rxjava:1.0.8'
-        compile 'io.reactivex:rxjava-reactive-streams:0.3.0'
+        compile 'io.reactivex:rxjava-reactive-streams:0.5.0'
         compile 'org.slf4j:slf4j-simple:1.7.6'
     }
 }
@@ -123,7 +123,7 @@ project('ripc-rxjava1') {
 		// ripc-tcp
 		compile project(":ripc-protocol-tcp")
         compile 'io.reactivex:rxjava:1.0.8'
-        compile 'io.reactivex:rxjava-reactive-streams:0.3.0'
+        compile 'io.reactivex:rxjava-reactive-streams:0.5.0'
 	}
 }
 

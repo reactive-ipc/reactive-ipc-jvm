@@ -1,28 +1,29 @@
 package io.ripc.rx.protocol.tcp;
 
-import io.ripc.protocol.tcp.Connection;
-import io.ripc.protocol.tcp.Connection.FlushSelector;
+import io.ripc.protocol.tcp.TcpConnection;
 import rx.Observable;
-import rx.RxReactiveStreams;
 import rx.Subscriber;
+import rx.functions.Action0;
+import rx.functions.Action1;
+import rx.internal.reactivestreams.SubscriberAdapter;
 
 import static rx.RxReactiveStreams.*;
 
 /**
- * An adapter for {@link Connection} representated as an {@link Observable}
+ * An adapter for {@link io.ripc.protocol.tcp.TcpConnection} representated as an {@link Observable}
  *
  * @param <R> The type of objects read from this connection.
  * @param <W> The type of objects written to this connection.
  */
 public class RxConnection<R, W> extends Observable<R> {
 
-    private final Connection<R, W> delegate;
+    private final TcpConnection<R, W> delegate;
 
-    protected RxConnection(final Connection<R, W> delegate) {
+    protected RxConnection(final TcpConnection<R, W> delegate) {
         super(new OnSubscribe<R>() {
             @Override
             public void call(Subscriber<? super R> subscriber) {
-                RxReactiveStreams.subscribe(delegate, subscriber);
+                delegate.subscribe(new SubscriberAdapter<>(subscriber));
             }
         });
         this.delegate = delegate;
@@ -37,28 +38,25 @@ public class RxConnection<R, W> extends Observable<R> {
      * @return Result of write.
      */
     public Observable<Void> write(Observable<W> data) {
-        return toObservable(delegate.write(toPublisher(data)));
+        return toObservable(delegate.write(toPublisher(data.doOnSubscribe(new Action0() {
+            @Override
+            public void call() {
+                System.out.println("Subscribed");
+            }
+        }).doOnNext(new Action1<W>() {
+            @Override
+            public void call(W w) {
+                System.out.println(w);
+            }
+        }).doOnTerminate(new Action0() {
+            @Override
+            public void call() {
+                System.out.println("COmpleted");
+            }
+        }))));
     }
 
-    /**
-     * Writes the passed stream of {@code data} and returns the result as an {@link Observable}. All written items are
-     * flushed whenever the passed {@code flushSelector} returns {@code true}
-     *
-     * @param data Data stream to write.
-     * @param flushSelector Selector that is invoked after every emitted item is written. If this selector returns
-     * {@code true} then all items written till now are flushed.
-     *
-     * @return Result of write.
-     */
-    public Observable<Void> write(Observable<W> data, FlushSelector<W> flushSelector) {
-        return toObservable(delegate.write(toPublisher(data), flushSelector));
-    }
-
-    Connection<R, W> getDelegate() {
-        return delegate;
-    }
-
-    public static <R, W> RxConnection<R, W> create(Connection<R, W> delegate) {
+    public static <R, W> RxConnection<R, W> create(TcpConnection<R, W> delegate) {
         return new RxConnection<>(delegate);
     }
 }

@@ -29,14 +29,6 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
                 .channel(NioServerSocketChannel.class);
     }
 
-    protected Netty4TcpServer(int port, TcpHandler<R, W> handler) {
-        super(handler);
-        this.port = port;
-        bootstrap = new ServerBootstrap()
-                .group(new NioEventLoopGroup())
-                .channel(NioServerSocketChannel.class);
-    }
-
     @Override
     protected Netty4TcpServer<R, W> doStart(final TcpHandler<R, W> handler) {
         bootstrap.childHandler(new ChannelInitializer<Channel>() {
@@ -57,7 +49,7 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
             }
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("Error waiting for binding server port: " + port, e);
         }
 
         return this;
@@ -88,8 +80,4 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
         return new Netty4TcpServer<>(port);
     }
 
-    @Override
-    protected <RR, WW> TcpServer<RR, WW> newServer(TcpHandler<RR, WW> handler) {
-        return new Netty4TcpServer<>(port, handler);
-    }
 }

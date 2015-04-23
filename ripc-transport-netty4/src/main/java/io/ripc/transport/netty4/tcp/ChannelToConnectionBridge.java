@@ -7,7 +7,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.util.ReferenceCountUtil;
-import io.ripc.protocol.tcp.Connection;
 import io.ripc.protocol.tcp.TcpHandler;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -16,10 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A bridge between netty's {@link Channel} and {@link Connection}. It has the following responsibilities:
+ * A bridge between netty's {@link Channel} and {@link io.ripc.protocol.tcp.TcpConnection}. It has the following responsibilities:
  *
  * <ul>
- <li>Create a new {@link Connection} instance when the channel is active and forwards it to the configured
+ <li>Create a new {@link io.ripc.protocol.tcp.TcpConnection} instance when the channel is active and forwards it to the configured
  {@link TcpHandler}.</li>
  <li>Reads any data from the channel and forwards it to the {@link Subscriber} attached via the event
  {@link ChannelToConnectionBridge.ConnectionInputSubscriberEvent}</li>
@@ -35,7 +34,7 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
     private static final Logger logger = LoggerFactory.getLogger(ChannelToConnectionBridge.class);
 
     private final TcpHandler<R, W> handler;
-    private ConnectionImpl<R, W> conn;
+    private TcpConnectionImpl<R, W> conn;
     private Subscriber<R> inputSubscriber; /*Populated via event ConnectionInputSubscriberEvent*/
 
     public ChannelToConnectionBridge(TcpHandler<R, W> handler) {
@@ -45,7 +44,7 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
     @Override
     public void channelActive(final ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        conn = new ConnectionImpl<>(ctx.channel());
+        conn = new TcpConnectionImpl<>(ctx.channel());
         handler.handle(conn)
                .subscribe(new Subscriber<Void>() {
                    @Override
@@ -161,7 +160,7 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
     }
 
     /**
-     * An event to attach a {@link Subscriber} to the {@link Connection} created by {@link ChannelToConnectionBridge}
+     * An event to attach a {@link Subscriber} to the {@link io.ripc.protocol.tcp.TcpConnection} created by {@link ChannelToConnectionBridge}
      *
      * @param <R>
      */
