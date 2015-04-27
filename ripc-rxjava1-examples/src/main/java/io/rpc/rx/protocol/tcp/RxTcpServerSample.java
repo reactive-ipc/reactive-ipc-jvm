@@ -19,7 +19,7 @@ public class RxTcpServerSample {
                    .startAndAwait(connection -> connection.flatMap(bb -> {
                        String msgStr = "Hello " + bb.toString(defaultCharset());
                        ByteBuf msg = Unpooled.buffer().writeBytes(msgStr.getBytes());
-                       return connection.write(Observable.just(msg).doOnCompleted(() -> System.out.println("Done!")));
+                       return connection.write(Observable.just(msg));
                    }));
     }
 }
