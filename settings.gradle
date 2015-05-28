@@ -4,5 +4,7 @@ include 'ripc-core',
 				'ripc-protocol-tcp',
 				'ripc-transport-netty4',
 				'ripc-transport-netty4-examples',
+				'ripc-reactor',
 				'ripc-rxjava1',
+				'ripc-reactor-examples',
 				'ripc-rxjava1-examples'

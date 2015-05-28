@@ -159,7 +159,12 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
         }
     }
 
-    /**
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		logger.error(cause.getMessage(),cause);
+	}
+
+	/**
      * An event to attach a {@link Subscriber} to the {@link io.ripc.protocol.tcp.TcpConnection} created by {@link ChannelToConnectionBridge}
      *
      * @param <R>

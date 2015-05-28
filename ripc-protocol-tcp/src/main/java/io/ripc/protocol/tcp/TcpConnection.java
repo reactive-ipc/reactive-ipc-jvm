@@ -18,6 +18,6 @@ public interface TcpConnection<R, W> extends Publisher<R> {
      *
      * @return Result of write.
      */
-	Publisher<Void> write(Publisher<W> data);
+	Publisher<Void> write(Publisher<? extends W> data);
 
 }

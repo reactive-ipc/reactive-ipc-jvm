@@ -1,170 +1,191 @@
 ext {
-    gradleVersion = '2.3'
+  gradleVersion = '2.3'
 
-    // Libraries
-    reactiveStreamsVersion = '1.0.0.RC5'
+  // Libraries
+  reactiveStreamsVersion = '1.0.0.RC5'
 
-    // Logging
-    slf4jVersion = '1.7.10'
-    logbackVersion = '1.1.2'
+  // Logging
+  slf4jVersion = '1.7.10'
+  logbackVersion = '1.1.2'
 
-    // Network Transports
-    nettyVersion = '4.0.26.Final'
+  // Network Transports
+  nettyVersion = '4.0.26.Final'
 
-    // Composition Libraries
-    rxjava1Version = '1.0.8'
-    rxjavaRsVersion = '0.5.0'
+  // Composition Libraries
+  rxjava1Version = '1.0.8'
+  rxjavaRsVersion = '0.5.0'
+  reactorVersion = '2.1.0.BUILD-SNAPSHOT'
 
-    // Testing
-    mockitoVersion = '1.10.19'
-    junitVersion = '4.12'
-    hamcrestVersion = '1.3'
+  // Testing
+  mockitoVersion = '1.10.19'
+  junitVersion = '4.12'
+  hamcrestVersion = '1.3'
 
-    javadocLinks = [
-            "http://docs.oracle.com/javase/7/docs/api/",
-            "http://www.reactive-streams.org/reactive-streams-1.0.0.RC3-javadoc/"
-    ] as String[]
+  javadocLinks = [
+      "http://docs.oracle.com/javase/7/docs/api/",
+      "http://www.reactive-streams.org/reactive-streams-1.0.0.RC3-javadoc/"
+  ] as String[]
 }
 
 allprojects {
-    apply plugin: 'java'
+  apply plugin: 'java'
 
-    [compileJava, compileTestJava]*.options*.compilerArgs = [
-            "-Xlint:varargs",
-            "-Xlint:cast",
-            "-Xlint:classfile",
-            "-Xlint:dep-ann",
-            "-Xlint:divzero",
-            "-Xlint:empty",
-            "-Xlint:finally",
-            "-Xlint:overrides",
-            "-Xlint:path",
-            "-Xlint:processing",
-            "-Xlint:static",
-            "-Xlint:try",
-            "-Xlint:deprecation",
-            "-Xlint:unchecked",
-            "-Xlint:-serial",      // intentionally disabled
-            "-Xlint:-options",     // intentionally disabled
-            "-Xlint:-fallthrough", // intentionally disabled
-            "-Xlint:-rawtypes"     // TODO enable and fix warnings
-    ]
+  [compileJava, compileTestJava]*.options*.compilerArgs = [
+      "-Xlint:varargs",
+      "-Xlint:cast",
+      "-Xlint:classfile",
+      "-Xlint:dep-ann",
+      "-Xlint:divzero",
+      "-Xlint:empty",
+      "-Xlint:finally",
+      "-Xlint:overrides",
+      "-Xlint:path",
+      "-Xlint:processing",
+      "-Xlint:static",
+      "-Xlint:try",
+      "-Xlint:deprecation",
+      "-Xlint:unchecked",
+      "-Xlint:-serial",      // intentionally disabled
+      "-Xlint:-options",     // intentionally disabled
+      "-Xlint:-fallthrough", // intentionally disabled
+      "-Xlint:-rawtypes"     // TODO enable and fix warnings
+  ]
 
-    compileJava {
-        sourceCompatibility = 1.7
-        targetCompatibility = 1.7
-    }
+  compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+  }
 
-    compileTestJava {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
-    }
+  compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+  }
 
-    repositories {
-        jcenter()
-        mavenCentral()
-    }
+  repositories {
+    maven { url 'https://repo.spring.io/libs-snapshot' }
+    jcenter()
+    mavenCentral()
+  }
 }
 
 subprojects { subproject ->
-    dependencies {
-        // Testing
-        testCompile "junit:junit:$junitVersion",
-                "org.hamcrest:hamcrest-library:$hamcrestVersion",
-                "org.slf4j:slf4j-api:$slf4jVersion"
-        testRuntime "ch.qos.logback:logback-classic:$logbackVersion"
-    }
+  dependencies {
+    // Testing
+    testCompile "junit:junit:$junitVersion",
+        "org.hamcrest:hamcrest-library:$hamcrestVersion",
+        "org.slf4j:slf4j-api:$slf4jVersion"
+    testRuntime "ch.qos.logback:logback-classic:$logbackVersion"
+  }
 }
 
 project('ripc-core') {
-    description = 'Reactive IPC Core Components'
-    dependencies {
-        // Reactive Streams
-        compile "org.reactivestreams:reactive-streams:$reactiveStreamsVersion"
-    }
+  description = 'Reactive IPC Core Components'
+  dependencies {
+    // Reactive Streams
+    compile "org.reactivestreams:reactive-streams:$reactiveStreamsVersion"
+  }
 }
 
 project('ripc-protocol-tcp') {
-    description = 'Reactive IPC TCP Components'
-    dependencies {
-        // ripc-core
-        compile project(":ripc-core")
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-    }
+  description = 'Reactive IPC TCP Components'
+  dependencies {
+    // ripc-core
+    compile project(":ripc-core"),
+        "org.slf4j:slf4j-api:$slf4jVersion"
+  }
 }
 
 project('ripc-transport-netty4-examples') {
-    description = 'Reactive IPC TCP Component examples'
+  description = 'Reactive IPC TCP Component examples'
 
-    dependencies {
-        // ripc-core
-        compile project(":ripc-transport-netty4")
-        compile "io.reactivex:rxjava:$rxjava1Version"
-        compile "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
-        compile "org.slf4j:slf4j-simple:$slf4jVersion"
-    }
+  dependencies {
+    // ripc-core
+    compile project(":ripc-transport-netty4"),
+        "io.reactivex:rxjava:$rxjava1Version",
+        "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
+    runtime "ch.qos.logback:logback-classic:$logbackVersion"
+  }
 }
 
 project('ripc-transport-netty4') {
-    description = 'Reactive IPC Netty 4.x Transport Implementation'
-    dependencies {
-        // ripc-tcp
-        compile project(":ripc-protocol-tcp")
-
-        // Netty
-        compile "io.netty:netty-codec:$nettyVersion"
-    }
+  description = 'Reactive IPC Netty 4.x Transport Implementation'
+  dependencies {
+    // ripc-tcp
+    compile project(":ripc-protocol-tcp"),
+        "io.netty:netty-all:$nettyVersion"
+  }
 }
 
 project('ripc-rxjava1') {
-    description = 'Reactive IPC Composition Layer Implementation'
-    dependencies {
-        // ripc-tcp
-        compile project(":ripc-protocol-tcp")
-        compile "io.reactivex:rxjava:$rxjava1Version"
-        compile "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
-    }
+  description = 'RxJava 1.x Reactive IPC Composition Layer Implementation'
+  dependencies {
+    // ripc-tcp
+    compile project(":ripc-protocol-tcp"),
+        "io.reactivex:rxjava:$rxjava1Version",
+        "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
+  }
+}
+
+project('ripc-reactor') {
+  description = 'Reactor Reactive IPC Composition Layer Implementation'
+  dependencies {
+    // ripc-tcp
+    compile project(":ripc-protocol-tcp"),
+        "io.projectreactor:reactor-net:$reactorVersion"
+  }
 }
 
 project('ripc-rxjava1-examples') {
-    description = 'Reactive IPC Composition Layer examples'
+  description = 'RxJava 1.x Reactive IPC Composition Layer examples'
 
-    dependencies {
-        // ripc-tcp
-        compile project(":ripc-rxjava1")
-        compile project(":ripc-transport-netty4-examples")
-    }
+  dependencies {
+    // ripc-tcp
+    compile project(":ripc-rxjava1"),
+        project(":ripc-transport-netty4-examples")
+  }
+}
+
+project('ripc-reactor-examples') {
+  description = 'Reactor Reactive IPC Composition Layer examples'
+
+  dependencies {
+    // ripc-tcp
+    compile project(":ripc-reactor"),
+        project(":ripc-transport-netty4")
+
+    runtime "ch.qos.logback:logback-classic:$logbackVersion"
+  }
 }
 
 configure(rootProject) {
-    description = "Reactive IPC"
+  description = "Reactive IPC"
 
-    task api(type: Javadoc) {
-        group = "Documentation"
-        description = "Generates aggregated Javadoc API documentation."
-        title = "${rootProject.description} ${version} API"
+  task api(type: Javadoc) {
+    group = "Documentation"
+    description = "Generates aggregated Javadoc API documentation."
+    title = "${rootProject.description} ${version} API"
 
-        dependsOn {
-            subprojects.collect {
-                it.tasks.getByName("jar")
-            }
-        }
-        options.memberLevel = JavadocMemberLevel.PROTECTED
-        options.author = true
-        options.header = rootProject.description
-        //options.overview = "src/api/overview.html"
-        options.stylesheetFile = file("src/api/stylesheet.css")
-        options.links(project.ext.javadocLinks)
-
-        source subprojects.collect { project ->
-            project.sourceSets.main.allJava
-        }
-
-        maxMemory = "1024m"
-        destinationDir = new File(buildDir, "api")
-
-        doFirst {
-            classpath = files(subprojects.collect { it.sourceSets.main.compileClasspath })
-        }
+    dependsOn {
+      subprojects.collect {
+        it.tasks.getByName("jar")
+      }
     }
+    options.memberLevel = JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.header = rootProject.description
+    //options.overview = "src/api/overview.html"
+    options.stylesheetFile = file("src/api/stylesheet.css")
+    options.links(project.ext.javadocLinks)
+
+    source subprojects.collect { project ->
+      project.sourceSets.main.allJava
+    }
+
+    maxMemory = "1024m"
+    destinationDir = new File(buildDir, "api")
+
+    doFirst {
+      classpath = files(subprojects.collect { it.sourceSets.main.compileClasspath })
+    }
+  }
 }
