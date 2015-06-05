@@ -10,30 +10,29 @@ import reactor.fn.Function;
  */
 public class ReactorTcpServer<R, W> {
 
-	static {
-		Environment.initializeIfEmpty()
-		           .assignErrorJournal();
-	}
+    static {
+        Environment.initializeIfEmpty().assignErrorJournal();
+    }
 
-	private final TcpServer<R, W> transport;
+    private final TcpServer<R, W> transport;
 
-	ReactorTcpServer(TcpServer<R, W> transport) {
-		this.transport = transport;
-	}
+    ReactorTcpServer(TcpServer<R, W> transport) {
+        this.transport = transport;
+    }
 
-	public ReactorTcpServer<R, W> start(Function<ReactorTcpConnection<R, W>, Publisher<Void>> handler) {
-		transport.startAndAwait(conn -> handler.apply(new ReactorTcpConnection<>(conn)));
-		return this;
-	}
+    public ReactorTcpServer<R, W> start(Function<ReactorTcpConnection<R, W>, Publisher<Void>> handler) {
+        transport.startAndAwait(conn -> handler.apply(new ReactorTcpConnection<>(conn)));
+        return this;
+    }
 
-	public boolean shutdown() {
-		boolean b = transport.shutdown();
-		transport.awaitShutdown();
-		return b;
-	}
+    public boolean shutdown() {
+        boolean b = transport.shutdown();
+        transport.awaitShutdown();
+        return b;
+    }
 
-	public static <R, W> ReactorTcpServer<R, W> create(TcpServer<R, W> transport) {
-		return new ReactorTcpServer<>(transport);
-	}
+    public static <R, W> ReactorTcpServer<R, W> create(TcpServer<R, W> transport) {
+        return new ReactorTcpServer<>(transport);
+    }
 
 }

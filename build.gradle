@@ -2,19 +2,19 @@ ext {
   gradleVersion = '2.3'
 
   // Libraries
-  reactiveStreamsVersion = '1.0.0.RC5'
+  reactiveStreamsVersion = '1.0.0'
 
   // Logging
-  slf4jVersion = '1.7.10'
-  logbackVersion = '1.1.2'
+  slf4jVersion = '1.7.12'
+  logbackVersion = '1.1.3'
 
   // Network Transports
-  nettyVersion = '4.0.26.Final'
+  nettyVersion = '4.0.28.Final'
 
   // Composition Libraries
   rxjava1Version = '1.0.8'
   rxjavaRsVersion = '0.5.0'
-  reactorVersion = '2.1.0.BUILD-SNAPSHOT'
+  reactorVersion = '2.0.3.RELEASE'
 
   // Testing
   mockitoVersion = '1.10.19'
@@ -23,7 +23,7 @@ ext {
 
   javadocLinks = [
       "http://docs.oracle.com/javase/7/docs/api/",
-      "http://www.reactive-streams.org/reactive-streams-1.0.0.RC3-javadoc/"
+      "http://www.reactive-streams.org/reactive-streams-1.0-javadoc/"
   ] as String[]
 }
 

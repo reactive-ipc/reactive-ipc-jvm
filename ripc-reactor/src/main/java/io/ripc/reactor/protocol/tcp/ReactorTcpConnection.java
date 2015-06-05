@@ -10,20 +10,20 @@ import reactor.rx.Stream;
  */
 public class ReactorTcpConnection<R, W> extends Stream<R> {
 
-	private final TcpConnection<R, W> transport;
+    private final TcpConnection<R, W> transport;
 
-	public ReactorTcpConnection(TcpConnection<R, W> transport) {
-		super();
-		this.transport = transport;
-	}
+    public ReactorTcpConnection(TcpConnection<R, W> transport) {
+        super();
+        this.transport = transport;
+    }
 
-	public Publisher<Void> writeWith(Publisher<W> out) {
-		return transport.write(out);
-	}
+    public Publisher<Void> writeWith(Publisher<W> out) {
+        return transport.write(out);
+    }
 
-	@Override
-	public void subscribe(Subscriber<? super R> sub) {
-		transport.subscribe(sub);
-	}
+    @Override
+    public void subscribe(Subscriber<? super R> sub) {
+        transport.subscribe(sub);
+    }
 
 }

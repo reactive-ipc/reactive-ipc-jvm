@@ -14,116 +14,116 @@ import java.util.List;
  * </p>
  */
 public interface Buffer<B> extends Cloneable,
-                                   AutoCloseable,
-                                   Comparable<Buffer<B>>,
-                                   Iterable<Buffer<B>> {
+        AutoCloseable,
+        Comparable<Buffer<B>>,
+        Iterable<Buffer<B>> {
 
-	int position();
+    int position();
 
-	Buffer<B> position(int pos);
+    Buffer<B> position(int pos);
 
-	int limit();
+    int limit();
 
-	Buffer<B> limit(int limit);
+    Buffer<B> limit(int limit);
 
-	int capacity();
+    int capacity();
 
-	Buffer<B> capacity(int capacity);
+    Buffer<B> capacity(int capacity);
 
-	int remaining();
+    int remaining();
 
-	Buffer<B> skip(int len);
+    Buffer<B> skip(int len);
 
-	Buffer<B> clear();
+    Buffer<B> clear();
 
-	Buffer<B> compact();
+    Buffer<B> compact();
 
-	Buffer<B> flip();
+    Buffer<B> flip();
 
-	Buffer<B> rewind();
+    Buffer<B> rewind();
 
-	Buffer<B> rewind(int len);
+    Buffer<B> rewind(int len);
 
-	Buffer<B> clone();
+    Buffer<B> clone();
 
-	Buffer<B> copy();
+    Buffer<B> copy();
 
-	Buffer<B> slice(int start, int len);
+    Buffer<B> slice(int start, int len);
 
-	Iterable<Buffer<B>> split(byte delimiter);
+    Iterable<Buffer<B>> split(byte delimiter);
 
-	Iterable<Buffer<B>> split(byte delimiter, boolean stripDelimiter);
+    Iterable<Buffer<B>> split(byte delimiter, boolean stripDelimiter);
 
-	Iterable<Buffer<B>> split(byte delimiter, boolean stripDelimiter, List<Buffer<B>> preallocatedList);
+    Iterable<Buffer<B>> split(byte delimiter, boolean stripDelimiter, List<Buffer<B>> preallocatedList);
 
-	Iterable<Buffer<B>> split(Buffer<B> delimiter);
+    Iterable<Buffer<B>> split(Buffer<B> delimiter);
 
-	Iterable<Buffer<B>> split(Buffer<B> delimiter, boolean stripDelimiter);
+    Iterable<Buffer<B>> split(Buffer<B> delimiter, boolean stripDelimiter);
 
-	Iterable<Buffer<B>> split(Buffer<B> delimiter, boolean stripDelimiter, List<Buffer<B>> preallocatedList);
+    Iterable<Buffer<B>> split(Buffer<B> delimiter, boolean stripDelimiter, List<Buffer<B>> preallocatedList);
 
-	Buffer<B> prepend(B data);
+    Buffer<B> prepend(B data);
 
-	Buffer<B> prepend(Buffer<B> buffer);
+    Buffer<B> prepend(Buffer<B> buffer);
 
-	Buffer<B> prepend(ByteBuffer buffer);
+    Buffer<B> prepend(ByteBuffer buffer);
 
-	Buffer<B> prepend(CharSequence chars);
+    Buffer<B> prepend(CharSequence chars);
 
-	Buffer<B> prepend(byte[] bytes);
+    Buffer<B> prepend(byte[] bytes);
 
-	Buffer<B> prepend(byte b);
+    Buffer<B> prepend(byte b);
 
-	Buffer<B> prepend(char c);
+    Buffer<B> prepend(char c);
 
-	Buffer<B> prepend(short s);
+    Buffer<B> prepend(short s);
 
-	Buffer<B> prepend(int i);
+    Buffer<B> prepend(int i);
 
-	Buffer<B> prepend(long l);
+    Buffer<B> prepend(long l);
 
-	Buffer<B> append(B data);
+    Buffer<B> append(B data);
 
-	Buffer<B> append(Buffer<B> buffer);
+    Buffer<B> append(Buffer<B> buffer);
 
-	Buffer<B> append(ByteBuffer buffer);
+    Buffer<B> append(ByteBuffer buffer);
 
-	Buffer<B> append(CharSequence chars);
+    Buffer<B> append(CharSequence chars);
 
-	Buffer<B> append(byte[] bytes);
+    Buffer<B> append(byte[] bytes);
 
-	Buffer<B> append(byte b);
+    Buffer<B> append(byte b);
 
-	Buffer<B> append(char c);
+    Buffer<B> append(char c);
 
-	Buffer<B> append(short s);
+    Buffer<B> append(short s);
 
-	Buffer<B> append(int i);
+    Buffer<B> append(int i);
 
-	Buffer<B> append(long l);
+    Buffer<B> append(long l);
 
-	byte readByte();
+    byte readByte();
 
-	void readBytes(byte[] bytes);
+    void readBytes(byte[] bytes);
 
-	short readShort();
+    short readShort();
 
-	int readInt();
+    int readInt();
 
-	float readFloat();
+    float readFloat();
 
-	double readDouble();
+    double readDouble();
 
-	long readLong();
+    long readLong();
 
-	char readChar();
+    char readChar();
 
-	void readChars(char[] chars);
+    void readChars(char[] chars);
 
-	String readString();
+    String readString();
 
-	String readString(CharsetDecoder decoder);
+    String readString(CharsetDecoder decoder);
 
-	B get();
+    B get();
 
 }
