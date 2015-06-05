@@ -9,19 +9,19 @@ import org.reactivestreams.Subscriber;
  */
 public final class SubscriberListener implements ChannelFutureListener {
 
-	private final Subscriber<? super Void> subscriber;
+    private final Subscriber<? super Void> subscriber;
 
-	public SubscriberListener(Subscriber<? super Void> subscriber) {
-		this.subscriber = subscriber;
-	}
+    public SubscriberListener(Subscriber<? super Void> subscriber) {
+        this.subscriber = subscriber;
+    }
 
-	@Override
-	public void operationComplete(ChannelFuture future) throws Exception {
-		if (future.isSuccess()) {
-			subscriber.onComplete();
-		} else {
-			subscriber.onError(future.cause());
-		}
-	}
+    @Override
+    public void operationComplete(ChannelFuture future) throws Exception {
+        if (future.isSuccess()) {
+            subscriber.onComplete();
+        } else {
+            subscriber.onError(future.cause());
+        }
+    }
 
 }

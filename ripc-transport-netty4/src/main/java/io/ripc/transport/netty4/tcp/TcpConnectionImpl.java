@@ -9,27 +9,27 @@ import org.reactivestreams.Subscriber;
 
 public class TcpConnectionImpl<R, W> implements TcpConnection<R, W> {
 
-	private final Channel nettyChannel;
+    private final Channel nettyChannel;
 
-	public TcpConnectionImpl(Channel nettyChannel) {
-		this.nettyChannel = nettyChannel;
-	}
+    public TcpConnectionImpl(Channel nettyChannel) {
+        this.nettyChannel = nettyChannel;
+    }
 
-	@Override
-	public Publisher<Void> write(final Publisher<? extends W> data) {
-		return new Publisher<Void>() {
-			@Override
-			public void subscribe(Subscriber<? super Void> s) {
-				nettyChannel.write(data)
-				            .addListener(new SubscriberListener(s));
-			}
-		};
-	}
+    @Override
+    public Publisher<Void> write(final Publisher<? extends W> data) {
+        return new Publisher<Void>() {
+            @Override
+            public void subscribe(Subscriber<? super Void> s) {
+                nettyChannel.write(data)
+                        .addListener(new SubscriberListener(s));
+            }
+        };
+    }
 
-	@Override
-	public void subscribe(Subscriber<? super R> s) {
-		nettyChannel.pipeline()
-		            .fireUserEventTriggered(new ConnectionInputSubscriberEvent<>(s));
-	}
+    @Override
+    public void subscribe(Subscriber<? super R> s) {
+        nettyChannel.pipeline()
+                .fireUserEventTriggered(new ConnectionInputSubscriberEvent<>(s));
+    }
 
 }
