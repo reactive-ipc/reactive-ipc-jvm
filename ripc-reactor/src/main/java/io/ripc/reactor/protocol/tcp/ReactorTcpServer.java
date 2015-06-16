@@ -22,7 +22,7 @@ public class ReactorTcpServer<R, W> {
         this.transport = transport;
     }
 
-    public ReactorTcpServer<R, W> start(ReactorTcpHandler<R, W> handler) {
+    public ReactorTcpServer<R, W> start(final ReactorTcpHandler<R, W> handler) {
 
         transport.startAndAwait(new TcpHandler<R, W>() {
             @Override

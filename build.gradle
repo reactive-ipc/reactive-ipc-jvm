@@ -27,6 +27,10 @@ ext {
   ] as String[]
 }
 
+def exampleProjects = [ project(':ripc-transport-netty4-examples'),
+                        project(':ripc-rxjava1-examples'),
+                        project(':ripc-reactor-examples') ]
+
 allprojects {
   apply plugin: 'java'
 
@@ -77,6 +81,14 @@ subprojects { subproject ->
     testRuntime "ch.qos.logback:logback-classic:$logbackVersion"
   }
 }
+
+configure(exampleProjects) {
+  compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+  }
+}
+
 
 project('ripc-core') {
   description = 'Reactive IPC Core Components'
@@ -131,7 +143,7 @@ project('ripc-reactor') {
   dependencies {
     // ripc-tcp
     compile project(":ripc-protocol-tcp"),
-        "io.projectreactor:reactor-net:$reactorVersion"
+        "io.projectreactor:reactor-stream:$reactorVersion"
   }
 }
 
