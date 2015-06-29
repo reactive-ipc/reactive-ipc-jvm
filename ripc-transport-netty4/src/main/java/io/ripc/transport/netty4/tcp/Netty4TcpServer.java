@@ -19,11 +19,17 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
     private static final Logger logger = LoggerFactory.getLogger(Netty4TcpServer.class);
 
     private final int port;
+    private final ChannelInitializer<Channel> initializer;
     private ServerBootstrap bootstrap;
     private ChannelFuture bindFuture;
 
     protected Netty4TcpServer(int port) {
+        this(port, null);
+    }
+
+    protected Netty4TcpServer(int port, ChannelInitializer<Channel> initializer) {
         this.port = port;
+        this.initializer = initializer;
         bootstrap = new ServerBootstrap()
                 .group(new NioEventLoopGroup())
                 .channel(NioServerSocketChannel.class);
@@ -34,6 +40,9 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
         bootstrap.childHandler(new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) throws Exception {
+                if (initializer != null) {
+                    ch.pipeline().addLast(initializer);
+                }
                 ch.pipeline().addLast("server_handler", new ChannelToConnectionBridge<>(handler));
             }
         });
@@ -78,6 +87,10 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
 
     public static <R, W> TcpServer<R, W> create(int port) {
         return new Netty4TcpServer<>(port);
+    }
+
+    public static <R, W> TcpServer<R, W> create(int port, ChannelInitializer<Channel> initializer) {
+        return new Netty4TcpServer<R, W>(port, initializer);
     }
 
 }
