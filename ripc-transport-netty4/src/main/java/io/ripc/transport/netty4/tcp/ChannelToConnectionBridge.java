@@ -161,7 +161,10 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getMessage(),cause);
+        logger.error(cause.getMessage(), cause);
+        if (null != inputSubscriber) {
+            inputSubscriber.onError(cause);
+        }
     }
 
     /**
