@@ -26,7 +26,7 @@ public class ReactorTcpServerSample {
      */
     private static void echo(TcpServer<ByteBuf, ByteBuf> transport) {
         ReactorTcpServer.create(transport)
-                        .start(connection -> {
+                        .startAndAwait(connection -> {
                             connection.flatMap(inByteBuf -> {
                                 String text = "Hello " + inByteBuf.toString(Charset.defaultCharset());
                                 ByteBuf outByteBuf = Unpooled.buffer().writeBytes(text.getBytes());

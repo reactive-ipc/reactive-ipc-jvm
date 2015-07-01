@@ -18,7 +18,7 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
 
     private static final Logger logger = LoggerFactory.getLogger(Netty4TcpServer.class);
 
-    private final int port;
+    private int port;
     private final ChannelInitializer<Channel> initializer;
     private ServerBootstrap bootstrap;
     private ChannelFuture bindFuture;
@@ -54,7 +54,8 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
             }
             SocketAddress localAddress = bindFuture.channel().localAddress();
             if (localAddress instanceof InetSocketAddress) {
-                logger.info("Started server at port: " + ((InetSocketAddress) localAddress).getPort());
+                port = ((InetSocketAddress) localAddress).getPort();
+                logger.info("Started server at port: " + port);
             }
 
         } catch (InterruptedException e) {
@@ -83,6 +84,11 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
             logger.error("Failed to shutdown the server.", e);
             return false;
         }
+    }
+
+    @Override
+    public int getPort() {
+        return port;
     }
 
     public static <R, W> TcpServer<R, W> create(int port) {

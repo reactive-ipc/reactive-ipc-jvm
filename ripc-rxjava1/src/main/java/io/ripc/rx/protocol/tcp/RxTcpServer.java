@@ -39,6 +39,10 @@ public final class RxTcpServer<R, W> {
         transport.awaitShutdown();
     }
 
+    public int getPort() {
+        return transport.getPort();
+    }
+
     public static <R, W> RxTcpServer<R, W> create(TcpServer<R, W> transport) {
         return new RxTcpServer<>(transport);
     }

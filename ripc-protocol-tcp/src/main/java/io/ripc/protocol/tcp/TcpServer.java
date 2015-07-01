@@ -36,4 +36,6 @@ public abstract class TcpServer<R, W> {
 
     protected abstract TcpServer<R, W> doStart(TcpHandler<R, W> handler);
 
+    public abstract int getPort();
+
 }

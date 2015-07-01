@@ -126,6 +126,7 @@ project('ripc-transport-netty4') {
     // ripc-tcp
     compile project(":ripc-protocol-tcp"),
         "io.netty:netty-all:$nettyVersion"
+    testCompile project(":ripc-test")
   }
 }
 
@@ -136,6 +137,8 @@ project('ripc-rxjava1') {
     compile project(":ripc-protocol-tcp"),
         "io.reactivex:rxjava:$rxjava1Version",
         "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
+    testCompile project(":ripc-transport-netty4"),
+            project(":ripc-test")
   }
 }
 
@@ -145,6 +148,8 @@ project('ripc-reactor') {
     // ripc-tcp
     compile project(":ripc-protocol-tcp"),
         "io.projectreactor:reactor-stream:$reactorVersion"
+    testCompile project(":ripc-transport-netty4"),
+            project(":ripc-test")
   }
 }
 
@@ -167,6 +172,14 @@ project('ripc-reactor-examples') {
         project(":ripc-transport-netty4"),
         "com.fasterxml.jackson.core:jackson-databind:2.5.4"
     runtime "ch.qos.logback:logback-classic:$logbackVersion"
+  }
+}
+
+project('ripc-test') {
+  description = 'Reactive IPC Test Components'
+  dependencies {
+    // Reactive Streams
+    compile "org.reactivestreams:reactive-streams:$reactiveStreamsVersion"
   }
 }
 
