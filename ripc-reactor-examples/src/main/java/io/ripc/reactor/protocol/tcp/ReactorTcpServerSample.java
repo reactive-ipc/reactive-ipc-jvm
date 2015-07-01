@@ -17,7 +17,7 @@ public class ReactorTcpServerSample {
         TcpServer<ByteBuf, ByteBuf> transport = Netty4TcpServer.<ByteBuf, ByteBuf>create(0);
 
         ReactorTcpServer.create(transport)
-                        .start(connection -> connection.flatMap(bb -> {
+                        .startAndAwait(connection -> connection.flatMap(bb -> {
                             String msgStr = "Hello " + bb.toString(Charset.defaultCharset()) + "!";
                             ByteBuf msg = Unpooled.buffer().writeBytes(msgStr.getBytes());
                             return connection.writeWith(Streams.just(msg));
