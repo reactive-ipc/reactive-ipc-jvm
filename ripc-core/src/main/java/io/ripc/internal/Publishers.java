@@ -9,14 +9,16 @@ import org.reactivestreams.Subscription;
  */
 public class Publishers {
 
-    public static <T> Publisher<T> just(final T value) {
+    public static <T> Publisher<T> just(final T... values) {
         return new Publisher<T>() {
             @Override
             public void subscribe(final Subscriber<? super T> s) {
                 s.onSubscribe(new Subscription() {
                     @Override
                     public void request(long n) {
-                        s.onNext(value);
+                        for (T value : values) {
+                            s.onNext(value);
+                        }
                         s.onComplete();
                     }
 

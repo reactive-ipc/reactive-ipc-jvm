@@ -7,4 +7,5 @@ include 'ripc-core',
         'ripc-reactor',
         'ripc-rxjava1',
         'ripc-reactor-examples',
-        'ripc-rxjava1-examples'
+        'ripc-rxjava1-examples',
+        'ripc-test'

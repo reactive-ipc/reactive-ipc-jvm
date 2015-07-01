@@ -1,5 +1,7 @@
 package io.ripc.reactor.protocol.tcp;
 
+import io.ripc.protocol.tcp.TcpConnection;
+import io.ripc.protocol.tcp.TcpHandler;
 import io.ripc.protocol.tcp.TcpServer;
 import org.reactivestreams.Publisher;
 import reactor.Environment;
@@ -20,8 +22,25 @@ public class ReactorTcpServer<R, W> {
         this.transport = transport;
     }
 
-    public ReactorTcpServer<R, W> start(Function<ReactorTcpConnection<R, W>, Publisher<Void>> handler) {
-        transport.startAndAwait(conn -> handler.apply(new ReactorTcpConnection<>(conn)));
+    public ReactorTcpServer<R, W> start(final ReactorTcpHandler<R, W> handler) {
+
+        transport.start(new TcpHandler<R, W>() {
+            @Override
+            public Publisher<Void> handle(TcpConnection<R, W> connection) {
+                return handler.apply(new ReactorTcpConnection<>(connection));
+            }
+        });
+        return this;
+    }
+
+    public ReactorTcpServer<R, W> startAndAwait(final ReactorTcpHandler<R, W> handler) {
+
+        transport.startAndAwait(new TcpHandler<R, W>() {
+            @Override
+            public Publisher<Void> handle(TcpConnection<R, W> connection) {
+                return handler.apply(new ReactorTcpConnection<>(connection));
+            }
+        });
         return this;
     }
 
@@ -29,6 +48,10 @@ public class ReactorTcpServer<R, W> {
         boolean b = transport.shutdown();
         transport.awaitShutdown();
         return b;
+    }
+
+    public int getPort() {
+        return transport.getPort();
     }
 
     public static <R, W> ReactorTcpServer<R, W> create(TcpServer<R, W> transport) {
