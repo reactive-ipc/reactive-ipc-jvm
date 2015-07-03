@@ -95,6 +95,7 @@ project('ripc-core') {
   dependencies {
     // Reactive Streams
     compile "org.reactivestreams:reactive-streams:$reactiveStreamsVersion"
+    testCompile "org.reactivestreams:reactive-streams-tck:$reactiveStreamsVersion"
   }
 }
 
