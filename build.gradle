@@ -116,6 +116,10 @@ project('ripc-transport-netty4-examples') {
         "com.fasterxml.jackson.core:jackson-databind:2.5.4",
         "io.reactivex:rxjava:$rxjava1Version",
         "io.reactivex:rxjava-reactive-streams:$rxjavaRsVersion"
+
+    //common facilities for samples
+    compile project(":ripc-test")
+
     runtime "ch.qos.logback:logback-classic:$logbackVersion"
   }
 }
@@ -171,6 +175,10 @@ project('ripc-reactor-examples') {
     compile project(":ripc-reactor"),
         project(":ripc-transport-netty4"),
         "com.fasterxml.jackson.core:jackson-databind:2.5.4"
+
+    //common facilities for samples
+    compile project(":ripc-test")
+
     runtime "ch.qos.logback:logback-classic:$logbackVersion"
   }
 }

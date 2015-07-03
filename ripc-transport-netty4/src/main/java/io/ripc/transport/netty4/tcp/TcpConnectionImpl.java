@@ -7,6 +7,7 @@ import io.ripc.protocol.tcp.TcpConnection;
 import io.ripc.transport.netty4.tcp.ChannelToConnectionBridge.ConnectionInputSubscriberEvent;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 public class TcpConnectionImpl<R, W> implements TcpConnection<R, W> {
 
@@ -31,6 +32,17 @@ public class TcpConnectionImpl<R, W> implements TcpConnection<R, W> {
         nettyChannel.pipeline().fireUserEventTriggered(new ConnectionInputSubscriberEvent<>(s));
     }
 
+    private static final Subscription IGNORE_SUBSCRIPTION = new Subscription() {
+        @Override
+        public void request(long n) {
+            //IGNORE
+        }
+
+        @Override
+        public void cancel() {
+            //IGNORE
+        }
+    };
 
     private static class FutureToSubscriberBridge implements ChannelFutureListener {
 
@@ -38,6 +50,7 @@ public class TcpConnectionImpl<R, W> implements TcpConnection<R, W> {
 
         public FutureToSubscriberBridge(Subscriber<? super Void> subscriber) {
             this.subscriber = subscriber;
+            subscriber.onSubscribe(IGNORE_SUBSCRIPTION);
         }
 
         @Override
