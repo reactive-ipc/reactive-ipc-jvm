@@ -43,6 +43,7 @@ public class Netty4TcpServer<R, W> extends TcpServer<R, W> {
                 if (initializer != null) {
                     ch.pipeline().addLast(initializer);
                 }
+                ch.config().setAutoRead(false);
                 ch.pipeline().addLast("server_handler", new ChannelToConnectionBridge<>(handler));
             }
         });

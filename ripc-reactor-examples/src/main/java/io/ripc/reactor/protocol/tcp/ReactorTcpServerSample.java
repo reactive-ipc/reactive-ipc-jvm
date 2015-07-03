@@ -15,48 +15,43 @@ import java.nio.charset.Charset;
  */
 public class ReactorTcpServerSample {
 
-    public static void main(String... args) throws InterruptedException {
-        TcpServer<ByteBuf, ByteBuf> transport = Netty4TcpServer.<ByteBuf, ByteBuf>create(0);
+	public static void main(String... args) throws InterruptedException {
+		TcpServer<ByteBuf, ByteBuf> transport = Netty4TcpServer.<ByteBuf, ByteBuf>create(0);
 //        echo(transport);
-        echoWithQuitCommand(transport);
-    }
+		echoWithQuitCommand(transport);
+	}
 
-    /**
-     * Keep echoing until the client goes away.
-     */
-    private static void echo(TcpServer<ByteBuf, ByteBuf> transport) {
-        ReactorTcpServer.create(transport)
-                        .startAndAwait(connection -> {
-                            connection.flatMap(inByteBuf -> {
-                                String text = "Hello " + inByteBuf.toString(Charset.defaultCharset());
-                                ByteBuf outByteBuf = Unpooled.buffer().writeBytes(text.getBytes());
-                                return connection.writeWith(Streams.just(outByteBuf));
-                            }).consume();
-                            return Streams.never();
-                        });
-    }
+	/**
+	 * Keep echoing until the client goes away.
+	 */
+	private static void echo(TcpServer<ByteBuf, ByteBuf> transport) {
+		ReactorTcpServer.create(transport)
+				.startAndAwait(connection -> {
+					connection.flatMap(inByteBuf -> {
+						String text = "Hello " + inByteBuf.toString(Charset.defaultCharset());
+						ByteBuf outByteBuf = Unpooled.buffer().writeBytes(text.getBytes());
+						return connection.writeWith(Streams.just(outByteBuf));
+					}).consume();
+					return Streams.never();
+				});
+	}
 
-    /**
-     * Keep echoing until the client sends "quite".
-     */
-    private static void echoWithQuitCommand(TcpServer<ByteBuf, ByteBuf> transport) {
-        ReactorTcpServer.create(transport)
-                .start(connection -> {
-                    Promise<Void> promise = Promises.prepare();
-                    connection.flatMap(inByteBuf -> {
-                        String input = inByteBuf.toString(Charset.defaultCharset()).trim();
-                        if ("quit".equalsIgnoreCase(input)) {
-                            promise.onComplete();
-                            return promise;
-                        }
-                        else {
-                            String text = "Hello " + inByteBuf.toString(Charset.defaultCharset());
-                            ByteBuf outByteBuf = Unpooled.buffer().writeBytes(text.getBytes());
-                            return connection.writeWith(Streams.just(outByteBuf));
-                        }
-                    }).consume();
-                    return promise;
-                });
-    }
+	/**
+	 * Keep echoing until the client sends "quit".
+	 */
+	private static void echoWithQuitCommand(TcpServer<ByteBuf, ByteBuf> transport) {
+		ReactorTcpServer.create(transport)
+				.start(connection -> connection
+								.map(byteBuf -> byteBuf.toString(Charset.defaultCharset()))
+								.takeWhile(input -> !"quit".equalsIgnoreCase(input.trim()))
+								.filter(input -> !"quit".equalsIgnoreCase(input.trim()))
+								.map(input -> "Hello " + input)
+								.flatMap(text -> connection.writeWith(
+												Streams.just(Unpooled.buffer().writeBytes(text.getBytes()))
+										)
+								)
+								.after()
+				);
+	}
 
 }

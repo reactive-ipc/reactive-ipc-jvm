@@ -3,7 +3,7 @@ package io.ripc.transport.netty4.tcp;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.ripc.internal.Publishers;
+import io.ripc.test.Publishers;
 
 import static java.nio.charset.Charset.*;
 import static rx.RxReactiveStreams.*;

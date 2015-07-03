@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.ripc.internal.Publishers;
+import io.ripc.test.Publishers;
 import io.ripc.protocol.tcp.TcpServer;
 import io.ripc.test.SocketTestUtils;
 import io.ripc.transport.netty4.tcp.Netty4TcpServer;
