@@ -13,7 +13,6 @@ public class ReactorTcpConnection<R, W> extends Stream<R> {
     private final TcpConnection<R, W> transport;
 
     public ReactorTcpConnection(TcpConnection<R, W> transport) {
-        super();
         this.transport = transport;
     }
 
