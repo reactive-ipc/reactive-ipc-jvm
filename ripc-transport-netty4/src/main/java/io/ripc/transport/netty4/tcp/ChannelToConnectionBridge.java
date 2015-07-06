@@ -15,16 +15,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A bridge between netty's {@link Channel} and {@link io.ripc.protocol.tcp.TcpConnection}. It has the following responsibilities:
- *
+ * A bridge between netty's {@link Channel} and {@link io.ripc.protocol.tcp.TcpConnection}. It has the following
+ * responsibilities:
+ * <p>
  * <ul>
- <li>Create a new {@link io.ripc.protocol.tcp.TcpConnection} instance when the channel is active and forwards it to the configured
- {@link TcpHandler}.</li>
- <li>Reads any data from the channel and forwards it to the {@link Subscriber} attached via the event
- {@link ChannelToConnectionBridge.ConnectionInputSubscriberEvent}</li>
- <li>Accepts writes of {@link Publisher} on the channel and translates the items emitted from that publisher to the
- channel.</li>
- </ul>
+ * <li>Create a new {@link io.ripc.protocol.tcp.TcpConnection} instance when the channel is active and forwards it to
+ * the configured
+ * {@link TcpHandler}.</li>
+ * <li>Reads any data from the channel and forwards it to the {@link Subscriber} attached via the event
+ * {@link ChannelToConnectionBridge.ConnectionInputSubscriberEvent}</li>
+ * <li>Accepts writes of {@link Publisher} on the channel and translates the items emitted from that publisher to the
+ * channel.</li>
+ * </ul>
  *
  * @param <R> The type of objects read from the underneath channel.
  * @param <W> The type of objects read written to the underneath channel.
@@ -33,9 +35,9 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelToConnectionBridge.class);
 
-    private final TcpHandler<R, W> handler;
-    private TcpConnectionImpl<R, W> conn;
-    private Subscriber<R> inputSubscriber; /*Populated via event ConnectionInputSubscriberEvent*/
+    private final TcpHandler<R, W>        handler;
+    private       TcpConnectionImpl<R, W> conn;
+    private       Subscriber<R>           inputSubscriber; /*Populated via event ConnectionInputSubscriberEvent*/
 
     public ChannelToConnectionBridge(TcpHandler<R, W> handler) {
         this.handler = handler;
@@ -46,28 +48,28 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
         super.channelActive(ctx);
         conn = new TcpConnectionImpl<>(ctx.channel());
         handler.handle(conn)
-               .subscribe(new Subscriber<Void>() {
-                   @Override
-                   public void onSubscribe(Subscription s) {
-                       // Void, no op
-                   }
+            .subscribe(new Subscriber<Void>() {
+                @Override
+                public void onSubscribe(Subscription s) {
+                    s.request(Long.MAX_VALUE); //no op
+                }
 
-                   @Override
-                   public void onNext(Void aVoid) {
-                       // Void, no op
-                   }
+                @Override
+                public void onNext(Void aVoid) {
+                    // Void, no op
+                }
 
-                   @Override
-                   public void onError(Throwable t) {
-                       logger.error("Error processing connection. Closing the channel.", t);
-                       ctx.channel().close();
-                   }
+                @Override
+                public void onError(Throwable t) {
+                    logger.error("Error processing connection. Closing the channel.", t);
+                    ctx.channel().close();
+                }
 
-                   @Override
-                   public void onComplete() {
-                       ctx.channel().close();
-                   }
-               });
+                @Override
+                public void onComplete() {
+                    ctx.channel().close();
+                }
+            });
     }
 
     @SuppressWarnings("unchecked")
@@ -102,6 +104,7 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
             ConnectionInputSubscriberEvent<R> subscriberEvent = (ConnectionInputSubscriberEvent<R>) evt;
             if (null == inputSubscriber) {
                 inputSubscriber = subscriberEvent.getInputSubscriber();
+                subscriberEvent.init(ctx);
             } else {
                 inputSubscriber.onError(new IllegalStateException("Only one connection input subscriber allowed."));
             }
@@ -161,11 +164,12 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getMessage(),cause);
+        logger.error(cause.getMessage(), cause);
     }
 
     /**
-     * An event to attach a {@link Subscriber} to the {@link io.ripc.protocol.tcp.TcpConnection} created by {@link ChannelToConnectionBridge}
+     * An event to attach a {@link Subscriber} to the {@link io.ripc.protocol.tcp.TcpConnection} created by {@link
+     * ChannelToConnectionBridge}
      *
      * @param <R>
      */
@@ -182,6 +186,28 @@ public class ChannelToConnectionBridge<R, W> extends ChannelDuplexHandler {
 
         public Subscriber<R> getInputSubscriber() {
             return inputSubscriber;
+        }
+
+        void init(ChannelHandlerContext ctx) {
+            try {
+                inputSubscriber.onSubscribe(new Subscription() {
+                    @Override
+                    public void request(long n) {
+            /*if(n == Long.MAX_VALUE){
+                            ctx.channel().config().setAutoRead(true);
+						}*/
+                        //ctx.read(); implements backpressure
+                        ctx.channel().config().setAutoRead(true);
+                    }
+
+                    @Override
+                    public void cancel() {
+                        //implements close on cancel (must be after any pending onComplete)
+                    }
+                });
+            } catch (Throwable error) {
+                inputSubscriber.onError(error);
+            }
         }
     }
 }
